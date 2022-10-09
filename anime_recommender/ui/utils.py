@@ -179,7 +179,9 @@ def apply_generate(
             weighted,
         ]
 
-    elif (not app_data.client or app_data.client.username != search_value.strip().lower()) and not type_switch:
+    elif (
+        not app_data.client or (search_value and app_data.client.username != search_value.strip().lower())
+    ) and not type_switch:
         app_data.client = AnilistClient(
             search_value.strip().lower(),
         )  # NOTE temporary one class # TODO change to client_dict
