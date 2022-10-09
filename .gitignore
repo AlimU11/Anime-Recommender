@@ -1,0 +1,6 @@
+.idea
+/data/
+/.mypy_cache/
+.ipynb_checkpoints
+/notebooks
+__pycache__

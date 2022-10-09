@@ -1,0 +1,140 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap');
+
+body {
+    font-family: 'Inter', sans-serif;
+}
+
+.content-card:hover{
+     transform: scale(1.05);
+     box-shadow: 0 10px 20px rgba(0,0,0,.12), 0 4px 8px rgba(0,0,0,.06);
+}
+
+h4 {
+    word-break: break-word;
+
+    margin-top: 15px;
+}
+
+h6 {
+    font-weight: bold;
+}
+
+.user-lists-container {
+    display: none;
+}
+
+#scale-slider {
+    margin-top: 15px;
+    padding-left: 0;
+    padding-right: 0;
+}
+
+#scale-graph-container {
+    padding-left: 0;
+    padding-right: 0;
+}
+
+.modebar{
+      display: none !important;
+}
+
+li { cursor: pointer; }
+
+.form-check, .form-check-label {
+    cursor: pointer;
+}
+
+.form-check-label.form-label {
+    cursor: pointer;
+    width: 100%;
+}
+
+.form-check-input {
+    cursor: pointer;
+}
+
+.form-check.form-switch {
+    cursor: auto;
+}
+
+.content-card p {
+
+}
+
+body::-webkit-scrollbar-track
+{
+	background-color: #FFFFFF;
+}
+
+body::-webkit-scrollbar
+{
+	width: 10px;
+	background-color: #FFF;
+}
+
+body::-webkit-scrollbar-thumb
+{
+    border-radius: 20px;
+	background-color: #555;
+}
+
+.content-card p::-webkit-scrollbar-track
+{
+	background-color: #FFFFFF;
+}
+
+.content-card p::-webkit-scrollbar
+{
+	width: 5px;
+	background-color: #FFF;
+}
+
+.content-card p::-webkit-scrollbar-thumb
+{
+    border-radius: 20px;
+	background-color: #555;
+}
+
+.accordion-button {
+    font-size: 1.5rem;
+    word-break: break-all;
+}
+
+.feature-description {
+    margin-bottom: 1rem;
+}
+
+.feature-description > .accordion-header > .accordion-button {
+    font-size: 1rem !important;
+}
+
+.feature-description > .accordion-collapse {
+    font-size: 0.8rem !important;
+}
+
+.feature-description > .accordion-collapse > .accordion-body {
+    padding: 20px 15px 0;
+}
+
+.feature-description > .accordion-collapse > .accordion-body > ol {
+    padding-left: 15px;
+}
+
+#container-scaled, #container-weighted{
+    padding-left: 0;
+    margin-bottom: 1rem;
+}
+
+.reset-button-container, .apply-button-container {
+    width: 100%;
+    display: inline-block;
+}
+
+#reset-graph, #apply-parameters-button {
+    float: right;
+    margin: 1.5rem auto 0;
+}
+
+h5 {
+    margin-top: 1rem;
+}

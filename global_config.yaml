@@ -1,0 +1,22 @@
+# config containing global variables
+
+# CHUNCK_SIZE - specifies the number of records to be processed during one iteration
+#               for computing similarity scores.
+#
+#               This is done to avoid excessive memory consumption due to cloud compute limitations.
+#               According to local tests, the value of 1000 has practically no impact on calculation time,
+#               but 16.7 times less memory is consumed. The results of chunked calculations are
+#               also almost the same (corr coef > 0.999) as for non-chunked calculations.
+#               The actual difference is the result of precision changes (float64 to float16
+#               to reduce RAM consumption) and common 'float values inaccuracy' while the order
+#               of operations (dot product, vector sum and precision change) is not the same.
+#               Moreover, it was found that the result difference leads to swapping of individual pairs of
+#               titles in some rare cases, which slightly affects the final result. However, this behaviour
+#               considered as acceptable approximation.
+CHUNK_SIZE: 100
+
+# DATA_PATH - specifies the path to the data file
+DATA_PATH:  data/anilist_transformed_no_compression.pickle
+
+# METADATA_PATH - specifies the path to the metadata file
+METADATA_PATH: data/anilist_transformed_meta_no_compression.pickle
