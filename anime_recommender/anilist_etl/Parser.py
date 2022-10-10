@@ -51,7 +51,7 @@ class Parser:
         return driver
 
     @staticmethod
-    def parse_links(driver: webdriver, links: list[str]) -> dict:
+    def parse_links(driver: webdriver.Chrome, links: list[str]) -> dict:
         """Parse the links using the driver.
 
         Parameters
