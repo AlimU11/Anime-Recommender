@@ -1,6 +1,11 @@
 default_stages: [commit]
+
 default_language_version:
   python: python3.9
+
+ci:
+    skip: [autoflake]
+
 repos:
 
   - repo: https://github.com/pre-commit/pre-commit-hooks
