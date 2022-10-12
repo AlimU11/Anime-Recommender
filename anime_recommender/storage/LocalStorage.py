@@ -1,7 +1,7 @@
 import gzip
 import os
 import pickle
-from typing import Callable, Optional, final
+from typing import Callable, Literal, Optional, final
 
 import pandas as pd
 from pandas import DataFrame
@@ -120,14 +120,14 @@ class LocalStorage(IStorage):
 
     # TODO refactor select methods
     # NOTE try axis = [0, 1] + all(isinstance(x, [int|str]) for x in list), list = [columns, titles, indexes]
-    def select(self, columns: list[str], sort_by: Optional[list[str]] = None) -> DataFrame:
-        return self.sort_by(sort_by).iloc[:, self.__metadata[self.__metadata.column_name.isin(columns)].index]
-
-    def select_by_index(self, indexes: list[int]) -> DataFrame:
-        return self.__data.iloc[indexes, :].reset_index()['index']
-
-    def select_by_title(self, titles: list[str]) -> DataFrame:
-        return self.__data[self.__data.title.isin(titles)].index
+    def select(self, selected: list, sort_by: Optional[list[str]] = None, axis: Literal[0, 1] = 0) -> DataFrame:
+        if axis == 0:
+            return self.sort_by(sort_by).iloc[:, self.__metadata[self.__metadata.column_name.isin(selected)].index]
+        elif axis == 1:
+            if all(isinstance(x, str) for x in selected):
+                return self.sort_by(sort_by)[self.__data.title.isin(selected)].index
+            elif all(isinstance(x, int) for x in selected):
+                return self.sort_by(sort_by).iloc[selected, :].reset_index()['index']
 
     def sort_by(self, columns: Optional[list[str]] = None) -> DataFrame:
         return self.__data.sort_values(by=columns) if columns else self.__data

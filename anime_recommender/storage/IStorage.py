@@ -1,5 +1,5 @@
 from abc import ABCMeta, abstractmethod
-from typing import Optional
+from typing import Literal, Optional
 
 from pandas import DataFrame
 
@@ -8,52 +8,25 @@ class IStorage(metaclass=ABCMeta):
     """A storage interface."""
 
     @abstractmethod
-    def select(self, columns: list, sort_by: Optional[list[str]] = None) -> DataFrame:
+    def select(self, selected: list, sort_by: Optional[list[str]] = None, axis: Literal[0, 1] = 0) -> DataFrame:
         """Select columns from data. Use `metadata` to select columns by type (e.g. `genre` to select all genre columns).
          Optionally, sort the data by the specified columns.
 
         Parameters
         ----------
-        columns : list[str]
-            List of columns to select.
+        selected : list
+            List of objects to select.
 
-        sort_by: str : list[str], optional
+        sort_by: list[str], optional
             List of columns to sort the data by.
+
+        axis: Literal[0, 1], optional
+            The axis to select along.
 
         Returns
         -------
         DataFrame
             Selected columns from the data, optionally sorted by the specified columns.
-        """
-
-    @abstractmethod
-    def select_by_index(self, indexes: list) -> DataFrame:
-        """Select rows from data by the specified indexes.
-
-        Parameters
-        ----------
-        indexes : list[int]
-            List of indexes to select.
-
-        Returns
-        -------
-        DataFrame
-            Selected rows from the data.
-        """
-
-    @abstractmethod
-    def select_by_title(self, titles: list[str]) -> DataFrame:
-        """Select rows from data by the specified titles.
-
-        Parameters
-        ----------
-        titles : list[str]
-            List of titles to select.
-
-        Returns
-        -------
-        DataFrame
-            Selected rows from the data.
         """
 
     @abstractmethod

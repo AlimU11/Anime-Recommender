@@ -129,7 +129,7 @@ class Recommender(IRecommender):
                 dtype=np.uint32,
             )
             if not is_titles
-            else self.__storage.select_by_title(self.__titles).values
+            else self.__storage.select(self.__titles, axis=1).values
         )
 
         self.__indexes_exclude: np.ndarray = (
@@ -160,7 +160,7 @@ class Recommender(IRecommender):
         )
 
         self.__sum: np.uint32 = self.__scores.sum() if self.__weighted and not is_titles else 1
-        self.__matrix: np.ndarray = self.__storage.select(self.__columns).values
+        self.__matrix: np.ndarray = self.__storage.select(self.__columns, axis=0).values
         self.__result_indexes: np.ndarray = np.empty((0,), dtype=np.uint32)
 
         # print(self)
@@ -250,7 +250,7 @@ class Recommender(IRecommender):
 
         return pd.concat(
             [
-                self.__storage.select_by_index(self.__result_indexes[:20]),
+                self.__storage.select(self.__result_indexes[:20].tolist(), axis=1),
                 pd.Series(self.__result_scores[:20], name='proba'),
             ],
             axis=1,

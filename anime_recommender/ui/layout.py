@@ -249,7 +249,7 @@ search_input = dbc.Col(
 search_input1 = dbc.Col(
     [
         dcc.Dropdown(
-            app_data.storage.select(['title'], ['index']).title.unique().tolist(),
+            app_data.storage.select(['title'], sort_by=['index'], axis=0).title.unique().tolist(),
             multi=True,
             id='search-titles-input',
         ),
