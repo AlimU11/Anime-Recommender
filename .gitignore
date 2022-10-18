@@ -1,5 +1,8 @@
 .idea
-/data/
+
+data/*
+!data/anilist_meta_staged.json
+
 /.mypy_cache/
 .ipynb_checkpoints
 __pycache__

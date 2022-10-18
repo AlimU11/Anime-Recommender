@@ -211,7 +211,7 @@ def extract_data_task(html: str, key: str) -> dict:
     if NOT_FOUND in html:
         return data
 
-    bs = bs4.BeautifulSoup(html, features='html')
+    bs = bs4.BeautifulSoup(html, 'html.parser')
     data[key] = {}
 
     data[key]['link'] = 'https://anilist.co/anime/' + key

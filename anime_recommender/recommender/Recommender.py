@@ -3,6 +3,7 @@ from typing import final
 
 import numpy as np
 import pandas as pd
+from loguru import logger
 from pandas import DataFrame
 from sklearn.metrics.pairwise import linear_kernel, rbf_kernel
 from sklearn.preprocessing import minmax_scale
@@ -163,7 +164,7 @@ class Recommender(IRecommender):
         self.__matrix: np.ndarray = self.__storage.select(self.__columns, axis=0).values
         self.__result_indexes: np.ndarray = np.empty((0,), dtype=np.uint32)
 
-        # print(self)
+        # logger.debug(self)
 
     def __repr__(self):
         return ''.join(
