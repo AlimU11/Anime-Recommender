@@ -38,7 +38,9 @@ class Parser:
 
         driver.implicitly_wait(10)
         driver.execute_cdp_cmd('Network.setUserAgentOverride', HEADERS)
-        driver.execute_script("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})")
+        driver.execute_script(
+            "Object.defineProperty(navigator, 'webdriver', {get: () => undefined})",
+        )
         driver.get(u)
         time.sleep(3)
 
@@ -89,7 +91,9 @@ class Parser:
                 action.move_to_element(btn)
 
                 try:
-                    WebDriverWait(driver, 3).until(EC.element_to_be_clickable(btn)).click()
+                    WebDriverWait(driver, 3).until(
+                        EC.element_to_be_clickable(btn),
+                    ).click()
 
                     # unfocus tags panel
                     element = driver.find_element(By.CLASS_NAME, 'review button edit')
@@ -104,7 +108,13 @@ class Parser:
         return data
 
     @staticmethod
-    def parse(driver: webdriver, min_v: int, max_v: int, links: list[str], step: int = 1000):
+    def parse(
+        driver: webdriver,
+        min_v: int,
+        max_v: int,
+        links: list[str],
+        step: int = 1000,
+    ):
         """Parse links in batches. Each batch is saved to a pickle file.
 
         Parameters

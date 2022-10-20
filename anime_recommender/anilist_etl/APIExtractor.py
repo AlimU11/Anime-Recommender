@@ -1,29 +1,30 @@
-import json
 import os
+import pickle
 import time
 from datetime import datetime
 from typing import Final
 
 import requests
 from loguru import logger
+from multipledispatch import dispatch
 
-from . import IExtractor, query
+from . import IExtractor, query, stage_file
 
 
-class AnilistExtractor(IExtractor):
+class APIExtractor(IExtractor):
     """A data extractor class."""
 
     __url: Final[str] = 'https://graphql.anilist.co'
 
     def __init__(self) -> None:
-        self.__meta_path: str = os.environ.get('METADATA_STAGED_PATH')
+        self.__metadata_path: str = os.environ.get('METADATA_STAGED_PATH')
         self.__max_per_page: int = int(os.environ.get('MAX_PER_PAGE'))
-        self.__data_staged_path: str = os.environ.get('DATA_STAGED_PATH')
+        self.__data_path: str = os.environ.get('DATA_STAGED_PATH')
         self.__data: list[dict] = []
 
-        if os.path.exists(self.__meta_path):
-            with open(self.__meta_path, 'r') as f:
-                self.__metadata = json.load(f)
+        if os.path.exists(self.__metadata_path):
+            with open(self.__metadata_path, 'rb') as f:
+                self.__metadata = pickle.load(f)
 
         else:
             self.__metadata = {
@@ -32,42 +33,42 @@ class AnilistExtractor(IExtractor):
                 'per_page': self.__max_per_page,
             }
 
-    def extract(self) -> None:
-        """Extract data."""
+        logger.info('APIExtractor initialized.')
+        logger.info(f'''Data path: {self.__data_path}''')
+        logger.info(f'''Metadata path: {self.__metadata_path}''')
+        logger.info('Metadata:')
+        logger.info(f'''Last update: {self.__metadata['last_update']}''')
+        logger.info(f'''Pages: {self.__metadata['pages']}''')
+        logger.info(f'''Per page: {self.__metadata['per_page']}''')
+
+    def extract_pipe(self) -> None:
+        logger.info('Processing data...')
+
         self.__extract()
         self.__stage()
 
+        logger.info('Done.')
+
     def __stage(self) -> None:
+        """Stage data and metadata to files.
+        Add suffix `_old` to old version of data and metadata.
+        """
         logger.info('Staging data...')
 
-        if os.path.exists(self.__meta_path + '_old'):
-            os.remove(self.__data_staged_path + '_old')
-
-        if os.path.exists(self.__meta_path):
-            os.rename(self.__meta_path, self.__meta_path + '_old')
-
-        if os.path.exists(self.__data_staged_path):
-            if os.path.exists(self.__data_staged_path + '_old'):
-                os.remove(self.__data_staged_path + '_old')
-
-            os.rename(self.__data_staged_path, self.__data_staged_path + '_old')
-
-        with open(self.__data_staged_path, 'w') as f:
-            json.dump(self.__data, f)
-
-        with open(self.__meta_path, 'w') as f:
-            json.dump(self.__meta, f)
+        stage_file(self.__data, self.__data_path)
+        stage_file(self.__metadata, self.__metadata_path)
 
         logger.info('Done.')
 
     def __extract(self) -> None:
+        """Extract data from AniList API."""
         logger.info('Extracting data...')
 
         page = 1
         has_next_page = True
 
         while has_next_page:
-            logger.info(f'''Progress {page}/{self.__metadata['pages']} (last iteration)''')
+            logger.info(f'''Progress {page}/{self.__metadata['pages']} (estimated)''')
 
             page_info, media = (
                 requests.post(
@@ -88,10 +89,14 @@ class AnilistExtractor(IExtractor):
             has_next_page = page_info['hasNextPage']
             self.__data += media
 
-            time.sleep(1)  # NOTE: Avoid rate limit
+            time.sleep(
+                0.7,
+            )  # NOTE: Avoid rate limit https://anilist.gitbook.io/anilist-apiv2-docs/overview/rate-limiting
 
         self.__meta = {
             'last_update': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
             'pages': page,
             'per_page': self.__metadata['per_page'],
         }
+
+        logger.info('Done.')

@@ -28,17 +28,6 @@ class ITransformer(metaclass=ABCMeta):
         """
 
     @abstractmethod
-    def transform_format(self) -> DataFrame:
-        """Transform format column to origin column and format column. Assume that format value without specification
-        is japanese. Otherwise, that origin value is specified in parentheses.
-
-        Returns
-        -------
-        DataFrame
-            Transformed DataFrame.
-        """
-
-    @abstractmethod
     def transform_categorical(self) -> DataFrame:
         """Transform to categorical and dummy variables.
 

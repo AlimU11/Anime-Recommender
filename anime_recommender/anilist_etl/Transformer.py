@@ -37,8 +37,20 @@ class Transformer(DataFrame, ITransformer):
         return info_dict
 
     def transform_format(self) -> DataFrame:
-        self['origin'] = self.format.apply(lambda x: re.search(r'\((.+)\)', x).group(1) if '(' in x else 'japanese')
-        self.format = self.format.apply(lambda x: re.search(r'(.+)\(', x).group(1) if '(' in x else x)
+        """Transform format column to origin column and format column. Assume that format value without specification
+        is japanese. Otherwise, that origin value is specified in parentheses.
+
+        Returns
+        -------
+        DataFrame
+            Transformed DataFrame.
+        """
+        self['origin'] = self.format.apply(
+            lambda x: re.search(r'\((.+)\)', x).group(1) if '(' in x else 'japanese',
+        )
+        self.format = self.format.apply(
+            lambda x: re.search(r'(.+)\(', x).group(1) if '(' in x else x,
+        )
 
         return self
 
@@ -60,12 +72,16 @@ class Transformer(DataFrame, ITransformer):
     def transform_description(self) -> DataFrame:
         """This method is not yet fully implemented. It is currently only cleaning the description column but not apply
         any NLP techniques."""
-        self['description_cleaned'] = self.description.apply(lambda x: TextProcessor(x).text_pipe())
+        self['description_cleaned'] = self.description.apply(
+            lambda x: TextProcessor(x).text_pipe(),
+        )
         return self
 
     def transform_scale(self) -> DataFrame:
         mm = MinMaxScaler()
-        self.loc[:, 'duration':'favorites'] = mm.fit_transform(self.loc[:, 'duration':'favorites'])
+        self.loc[:, 'duration':'favorites'] = mm.fit_transform(
+            self.loc[:, 'duration':'favorites'],
+        )
 
         return self
 
@@ -74,7 +90,10 @@ class Transformer(DataFrame, ITransformer):
         return self
 
     def drop_transformed(self) -> DataFrame:
-        self = self.drop(['tags', 'studios', 'producers', 'genres', 'status', 'description'], axis=1)
+        self = self.drop(
+            ['tags', 'studios', 'producers', 'genres', 'status', 'description'],
+            axis=1,
+        )
         return self
 
     def transform_pipe(self) -> DataFrame:

@@ -7,5 +7,5 @@ class IExtractor(metaclass=ABCMeta):
     """A data extractor interface."""
 
     @abstractmethod
-    def extract(self) -> None:
-        """Extract data."""
+    def extract_pipe(self) -> None:
+        """Extract and stage data."""

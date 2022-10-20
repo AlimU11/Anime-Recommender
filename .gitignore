@@ -1,7 +1,7 @@
 .idea
 
 data/*
-!data/anilist_meta_staged.json
+!data/anilist_meta_staged.pickle
 
 /.mypy_cache/
 .ipynb_checkpoints
