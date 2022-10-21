@@ -10,7 +10,6 @@ pyyaml>=6.0
 ratelimit>=2.2.1
 requests>=2.26.0
 scikit-learn>=1.1.1
-yaml>=0.2.5
 
 # Obsolete, used for scraper
 # selenium>=4.5.0
