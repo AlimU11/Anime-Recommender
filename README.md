@@ -8,11 +8,30 @@ Parametrized anime recommendation system that produces recommendations based on
 2. user profile (refer to Current limitations section for further details)
 ![img_1.png](img_1.png)
 
+# Local Setup
+
+1. Clone the repository
+2. Check if you have installed all modules (except for obsolete) from requirements.txt
+3. Run `main_etl.py`
+```python
+python main_etl.py
+```
+This will fetch the data from the source and save it in the `data` folder. See
+ ```python
+python main_etl.py -h
+```
+to run only some parts of the ETL process.
+
+4. Run `main_local.py`
+```python
+python main_local.py
+```
+
 # Roadmap
 Key features in further releases (unordered, full details are in the [project page](https://github.com/users/AlimU11/projects/1)):
 1. Add new recommendation engines
 2. Improve UI - add dark theme, make responsive layout for mobile devices
-3. Create weekly or monthly etl process to update data mart
+3. <strike>Create weekly or monthly etl process to update data mart</strike> ✔️
 4. Resolve current limitations (refer to `Current limitations` section for further details)
 5. Add support for user profiles from other sites (MyAnimeList, Kitsu, etc.)
 6. Create etl and data mart for manga

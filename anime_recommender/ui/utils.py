@@ -35,86 +35,24 @@ def recommend_content():
         app_data.input_values,
     )
 
-    df = app_data.recommender.recommend()
-
-    # curr, peak = tracemalloc.get_traced_memory()
-    # print(f'AFTER RECOMMEND Current memory usage is {curr / 10 ** 6:.2f}MB; Peak was {peak / 10**6:.2f} MB')
-
-    app_data.recommender = None
-
-    if df.empty:
-        return alert(
-            '''No titles found to include in calculations. By default, included lists are [Completed]. Ensure that chosen lists are not empty or try to choose lists manually''',
-        )
-
-    # media content memoization
-    # implemented in order to reduce the load on api
-
-    cols = app_data.df.columns
-    shared_index = np.intersect1d(app_data.df['index'].values, df['index'].values)
-
-    if len(shared_index) > 0:
-        no_media_update_df = df[df['index'].isin(shared_index)].sort_values(by='index')
-        no_media_update_utils = app_data.df[app_data.df['index'].isin(shared_index)].sort_values(by='index')[
-            ['cover_image', 'color', 'description', 'title']
-        ]
-        df = df[~df['index'].isin(shared_index)]
-        app_data.df = app_data.df[~app_data.df['index'].isin(shared_index)]
-
-        no_media_update_df.index = np.arange(len(no_media_update_df))
-        no_media_update_utils.index = np.arange(len(no_media_update_utils))
-        df.index = np.arange(len(df))
-        app_data.df.index = np.arange(len(app_data.df))
-
-        no_media_update = pd.concat([no_media_update_df, no_media_update_utils], axis=1, ignore_index=True)
-        no_media_update.columns = cols
-
-    else:
-        no_media_update = pd.DataFrame(columns=cols)
-
-    # tmp = pd.DataFrame(df['index'].apply(AnilistClient.get_media_info).tolist())
-    # print(df)
-    # print(tmp)
-    # print('DF SHAPE: ', df.shape)
-    # print('TMP SHAPE: ', tmp.shape)
-
-    df = pd.merge(
-        df,
-        pd.DataFrame(
-            AnilistClient.get_media_info(df['index'].values.tolist())
-            if len(df)
-            else pd.DataFrame(columns=['cover_image', 'color', 'description', 'title']),
-        ),
-        left_index=True,
-        right_index=True,
-        how='outer',
+    app_data.df = pd.merge(
+        pd.DataFrame(app_data.recommender.recommend(), columns=['id', 'proba']),
+        app_data.storage.info,
+        how='left',
+        left_on='id',
+        right_on='id',
     )
 
-    # print(df)
+    df = app_data.df.iloc[:20]  # TODO replace
 
-    if 'description' in df.columns:
-        df.description = df.description.apply(lambda x: app_data.text_processor(x).remove_html_tags())
-
-    # print(df)
-
-    df = pd.concat([df, no_media_update], axis=0, ignore_index=True)
-    df.columns = cols
-    app_data.df = pd.concat([app_data.df, df], axis=0, ignore_index=True)
-    app_data.df.columns = cols
-
-    # print(df)
-
-    # curr, peak = tracemalloc.get_traced_memory()
-    # print(f'BEFORE CARDS Current memory usage is {curr / 10 ** 6:.2f}MB; Peak was {peak / 10**6:.2f} MB')
+    pd.options.mode.chained_assignment = None
+    df.loc[:, 'id'] = df.id.astype(int)
+    df.loc[:, 'description'] = df.description.apply(lambda x: app_data.text_processor(x).remove_html_tags())
+    pd.options.mode.chained_assignment = 'warn'
 
     cards = df.sort_values(by='proba', ascending=False).apply(card, axis=1).tolist()
 
-    # curr, peak = tracemalloc.get_traced_memory()
-    # print(f'AFTER CARDS Current memory usage is {curr / 10 ** 6:.2f}MB; Peak was {peak / 10**6:.2f} MB')
-
     return dbc.Row(cards, justify='evenly', align='center', className='mt-5')
-
-    # dbc.Table.from_dataframe(df, striped=True, bordered=True, hover=True)
 
 
 def update_app_data(

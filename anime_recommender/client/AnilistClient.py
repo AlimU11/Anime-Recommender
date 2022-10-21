@@ -154,6 +154,7 @@ class AnilistClient(IClient):
         list[dict]
             List of media info. Each media contains cover image, media color, description and title.
         """
+
         response = requests.post(
             AnilistClient.__url,
             json={'query': query(media_ids), 'variables': variables(media_ids)},

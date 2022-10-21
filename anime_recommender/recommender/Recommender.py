@@ -130,7 +130,9 @@ class Recommender(IRecommender):
                 dtype=np.uint32,
             )
             if not is_titles
-            else self.__storage.select(self.__titles, axis=1).values
+            else self.__storage.info[
+                self.__storage.info['english'].isin(self.__titles)
+            ].index.values  # TODO: replace english
         )
 
         self.__indexes_exclude: np.ndarray = (
@@ -161,7 +163,10 @@ class Recommender(IRecommender):
         )
 
         self.__sum: np.uint32 = self.__scores.sum() if self.__weighted and not is_titles else 1
-        self.__matrix: np.ndarray = self.__storage.select(self.__columns, axis=0).values
+        self.__matrix: np.ndarray = self.__storage.data.iloc[
+            :,
+            self.__storage.metadata[self.__storage.metadata.column_name.isin(self.__columns)].index,
+        ].values
         self.__result_indexes: np.ndarray = np.empty((0,), dtype=np.uint32)
 
         # logger.debug(self)
@@ -187,6 +192,9 @@ class Recommender(IRecommender):
                 f'storage={self.__storage})',
             ],
         )
+
+    def __str__(self):
+        return self.__repr__()
 
     def recommend(self) -> DataFrame:
         return self.__chunk_calculate() if len(self.__indexes_include) else pd.DataFrame()
@@ -249,13 +257,12 @@ class Recommender(IRecommender):
         ]
         self.__result_scores = minmax_scale(result_vector[self.__result_indexes])
 
-        return pd.concat(
+        return np.hstack(
             [
-                self.__storage.select(self.__result_indexes[:20].tolist(), axis=1),
-                pd.Series(self.__result_scores[:20], name='proba'),
+                self.__storage.info.iloc[self.__result_indexes].id.values.reshape(-1, 1),
+                self.__result_scores.reshape(-1, 1),
             ],
-            axis=1,
-        )  # TODO make number of results a parameter # TODO remove DataFrame usage on recommender class level, return ndarray
+        )
 
     def get_data(self) -> None:
         raise NotImplementedError('This method is not implemented')

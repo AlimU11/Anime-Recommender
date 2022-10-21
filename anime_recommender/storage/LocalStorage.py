@@ -1,7 +1,7 @@
 import gzip
 import os
 import pickle
-from typing import Callable, Literal, Optional, final
+from typing import Callable, Optional, final
 
 import pandas as pd
 from pandas import DataFrame
@@ -100,8 +100,10 @@ class LocalStorage(IStorage):
     def __init__(self):
         self.__data_path: str = os.environ.get('DATA_PATH')
         self.__metadata_path: str = os.environ.get('METADATA_PATH')
+        self.__info_path: str = os.environ.get('INFO_PATH')
         self.__data: DataFrame = LocalStorage.__format[self.__data_path.split('.')[-1]](self.__data_path)
         self.__metadata: DataFrame = LocalStorage.__format[self.__metadata_path.split('.')[-1]](self.__metadata_path)
+        self.__info: DataFrame = LocalStorage.__format[self.__info_path.split('.')[-1]](self.__info_path)
         self.__mapping: dict[int, int] = {
             key: value for value, key in self.__data.reset_index().iloc[:, :2].values.tolist()
         }
@@ -118,27 +120,21 @@ class LocalStorage(IStorage):
             ],
         )
 
-    # TODO refactor select methods
-    # NOTE try axis = [0, 1] + all(isinstance(x, [int|str]) for x in list), list = [columns, titles, indexes]
-    def select(self, selected: list, sort_by: Optional[list[str]] = None, axis: Literal[0, 1] = 0) -> DataFrame:
-        if axis == 0:
-            return self.sort_by(sort_by).iloc[:, self.__metadata[self.__metadata.column_name.isin(selected)].index]
-        elif axis == 1:
-            if all(isinstance(x, str) for x in selected):
-                return self.sort_by(sort_by)[self.__data.title.isin(selected)].index
-            elif all(isinstance(x, int) for x in selected):
-                return self.sort_by(sort_by).iloc[selected, :].reset_index()['index']
-
-    def sort_by(self, columns: Optional[list[str]] = None) -> DataFrame:
-        return self.__data.sort_values(by=columns) if columns else self.__data
-
-    def map(self, indexes: list, reverse: Optional[bool] = False) -> list[int]:
+    def map(self, indexes: list, inverse: Optional[bool] = False) -> list[int]:
         return (
             [self.__mapping_inverse[index] for index in indexes if index in self.__mapping_inverse.keys()]
-            if reverse
+            if inverse
             else [self.__mapping[index] for index in indexes if index in self.__mapping.keys()]
         )
 
     @property
     def data(self) -> DataFrame:
         return self.__data
+
+    @property
+    def metadata(self) -> DataFrame:
+        return self.__metadata
+
+    @property
+    def info(self) -> DataFrame:
+        return self.__info  # TODO: replace english

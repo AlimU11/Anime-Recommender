@@ -61,7 +61,7 @@ alert = lambda text: dbc.Alert(
     style={'height': 'fit-content', 'margin-top': '0rem'},
 )
 
-card = lambda s: dbc.Card(
+card = lambda s: dbc.Card(  # TODO: replace `english` with proper lang title
     [
         dbc.CardBody(
             [
@@ -97,8 +97,8 @@ card = lambda s: dbc.Card(
                     [
                         html.H6(
                             html.A(
-                                f'''{s.title[:24]}{'...' if len(s.title) > 24 else ''}''',
-                                href=f'''https://anilist.co/anime/{s['index']}''',
+                                f'''{s.english[:24]}{'...' if len(s.english) > 24 else ''}''',
+                                href=f'''https://anilist.co/anime/{s['id']}''',
                                 target='_blank',
                                 style={
                                     'color': f'''{s.color if s.color else 'black'}''',
@@ -106,7 +106,7 @@ card = lambda s: dbc.Card(
                                     'z-index': '999',
                                     'position': 'relative',
                                 },
-                                id=f'''tooltip-title-{s['index']}''',
+                                id=f'''tooltip-title-{s['id']}''',
                                 className='card-title',
                             ),
                         ),
@@ -125,7 +125,7 @@ card = lambda s: dbc.Card(
                         # dbc.Button(
                         #    f'''Explore''',
                         #    color="primary",
-                        #    href=f'''https://anilist.co/anime/{s['index']}''',
+                        #    href=f'''https://anilist.co/anime/{s['id']}''',
                         #    target='_blank'
                         # ),
                     ],
@@ -140,16 +140,16 @@ card = lambda s: dbc.Card(
                     },
                     className='mt-auto',
                 ),
-                tooltip(s.title, f'''tooltip-title-{s['index']}''', 'top') if len(s.title) > 24 else '',
+                tooltip(s.english, f'''tooltip-title-{s['id']}''', 'top') if len(s.english) > 24 else '',
                 html.A(
                     className='stretched-link',
-                    href=f'''https://anilist.co/anime/{s['index']}''',
+                    href=f'''https://anilist.co/anime/{s['id']}''',
                     target='_blank',
                 ),
             ],
             style={
                 'padding': '0px',
-                'background-image': f'url({s.cover_image})',
+                'background-image': f'url({s.large})',  # TODO: rename
                 'background-repeat': 'no-repeat',
                 'background-position': 'bottom',
                 'background-size': '100% auto',
@@ -241,7 +241,7 @@ search_input = dbc.Col(
             style={'height': '100%', 'margin': '0px'},
         ),
     ],
-    style={'background-color': 'white', 'margin-left': '2rem'},
+    style={'background-f': 'white', 'margin-left': '2rem'},
     id='search-user-input-container',
     align='center',
 )
@@ -249,12 +249,12 @@ search_input = dbc.Col(
 search_input1 = dbc.Col(
     [
         dcc.Dropdown(
-            app_data.storage.select(['title'], sort_by=['index'], axis=0).title.unique().tolist(),
+            app_data.storage.info.english.unique().tolist(),  # TODO: add other languages
             multi=True,
             id='search-titles-input',
         ),
     ],
-    style={'background-color': 'white', 'margin-left': '2rem'},
+    style={'background-color': 'white', 'margin-left': '2rem', 'display': 'none'},
     id='search-title-input-container',
 )
 
@@ -388,9 +388,9 @@ feature_options = [
     {'label': 'Number of Episodes', 'value': 'episodes'},
     {'label': 'Duration', 'value': 'duration'},
     {'label': 'Source', 'value': 'source'},
-    {'label': 'Origin', 'value': 'origin'},
+    {'label': 'Origin', 'value': 'countryOfOrigin'},
     {'label': 'Season', 'value': 'season'},
-    {'label': 'Is Adult', 'value': 'is_adult'},
+    {'label': 'Is Adult', 'value': 'isAdult'},
     {'label': 'Favorites', 'value': 'favorites'},
     {'label': 'Popularity', 'value': 'popularity'},
     # TODO add description and dates

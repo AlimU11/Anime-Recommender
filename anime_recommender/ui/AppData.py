@@ -66,7 +66,7 @@ class AppData:
         self.__scale_range: list[float] = []
         self.__type_switch: bool = False
         self.__input_values: list[str] = []
-        self.__df: DataFrame = DataFrame(columns=['index', 'proba', 'cover_image', 'color', 'description', 'title'])
+        self.__df: Optional[DataFrame] = None
         self.__text_processor: Type[ITextProcessor] = TextProcessor
 
     @property

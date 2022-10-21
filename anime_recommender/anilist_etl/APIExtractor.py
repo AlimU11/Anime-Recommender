@@ -1,12 +1,11 @@
 import os
 import pickle
-import time
 from datetime import datetime
 from typing import Final
 
 import requests
 from loguru import logger
-from multipledispatch import dispatch
+from ratelimit import limits
 
 from . import IExtractor, query, stage_file
 
@@ -15,6 +14,7 @@ class APIExtractor(IExtractor):
     """A data extractor class."""
 
     __url: Final[str] = 'https://graphql.anilist.co'
+    __ONE_MINUTE: Final[int] = 60
 
     def __init__(self) -> None:
         self.__metadata_path: str = os.environ.get('METADATA_STAGED_PATH')
@@ -60,6 +60,10 @@ class APIExtractor(IExtractor):
 
         logger.info('Done.')
 
+    @limits(
+        calls=90,
+        period=__ONE_MINUTE,
+    )  # NOTE: Avoid rate limit https://anilist.gitbook.io/anilist-apiv2-docs/overview/rate-limiting
     def __extract(self) -> None:
         """Extract data from AniList API."""
         logger.info('Extracting data...')
@@ -88,10 +92,6 @@ class APIExtractor(IExtractor):
             page += 1
             has_next_page = page_info['hasNextPage']
             self.__data += media
-
-            time.sleep(
-                0.7,
-            )  # NOTE: Avoid rate limit https://anilist.gitbook.io/anilist-apiv2-docs/overview/rate-limiting
 
         self.__meta = {
             'last_update': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
