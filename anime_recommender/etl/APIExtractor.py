@@ -11,10 +11,31 @@ from . import IExtractor, query, stage_file
 
 
 class APIExtractor(IExtractor):
-    """A data extractor class."""
+    """IExtractor interface implementation.
+
+    This class is responsible for extracting data from the API.
+
+    Attributes
+    ----------
+    __metadata_path : str
+        Path to metadata file.
+
+    __max_per_page : int
+        Maximum number of items per extracted page.
+
+    __data_path : str
+        Path to data file.
+
+    __data : list[dict]
+        List of extracted data.
+
+    __metadata : dict
+        Dictionary with metadata. Used primarily to display estimated amount of pages, assuming that the number of items
+        per page has not changed.
+    """
 
     __url: Final[str] = 'https://graphql.anilist.co'
-    __ONE_MINUTE: Final[int] = 60
+    __API_LIMIT: Final[int] = 60
 
     def __init__(self) -> None:
         self.__metadata_path: str = os.environ.get('METADATA_STAGED_PATH')
@@ -50,9 +71,7 @@ class APIExtractor(IExtractor):
         logger.info('Done.')
 
     def __stage(self) -> None:
-        """Stage data and metadata to files.
-        Add suffix `_old` to old version of data and metadata.
-        """
+        """Stage data and metadata to files."""
         logger.info('Staging data...')
 
         stage_file(self.__data, self.__data_path)
@@ -62,8 +81,8 @@ class APIExtractor(IExtractor):
 
     @limits(
         calls=90,
-        period=__ONE_MINUTE,
-    )  # NOTE: Avoid rate limit https://anilist.gitbook.io/anilist-apiv2-docs/overview/rate-limiting
+        period=__API_LIMIT,  # NOTE: Avoid rate limit https://anilist.gitbook.io/anilist-apiv2-docs/overview/rate-limiting
+    )
     def __extract(self) -> None:
         """Extract data from AniList API."""
         logger.info('Extracting data...')

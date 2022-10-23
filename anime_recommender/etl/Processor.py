@@ -1,3 +1,5 @@
+# OBSOLETE, USED FOR SCRAPING
+
 import numpy as np
 from dateutil import parser
 from pandas import DataFrame

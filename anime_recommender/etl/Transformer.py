@@ -1,3 +1,5 @@
+# OBSOLETE, USED FOR SCRAPING
+
 import re
 
 import numpy as np

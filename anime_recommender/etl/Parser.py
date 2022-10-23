@@ -1,3 +1,5 @@
+# OBSOLETE, USED FOR SCRAPING
+
 import pickle
 import re
 import time

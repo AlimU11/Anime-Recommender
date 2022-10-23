@@ -2,9 +2,10 @@ from .IExtractor import IExtractor
 from .IProcessor import IProcessor
 from .ITextProcessor import ITextProcessor
 from .ITransformer import ITransformer
-from .Parser import Parser
-from .Processor import Processor
-from .Transformer import Transformer
+
+# from .Parser import Parser
+# from .Processor import Processor
+# from .Transformer import Transformer
 from .utils import stage_file
 
 from .queries import query  # isort:skip

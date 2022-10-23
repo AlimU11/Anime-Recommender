@@ -1,6 +1,6 @@
 import os
 import pickle
-from typing import Final
+from typing import Final, Optional
 
 import numpy as np
 import pandas as pd
@@ -12,7 +12,43 @@ from . import ITransformer, TextProcessor, stage_file
 
 
 class APITransformer(DataFrame, ITransformer):
-    """DataFrame Adapter for data transformation."""
+    """DataFrame Adapter for data transformation.
+
+    Attributes
+    ----------
+    __staged_path: str
+        Path to the staged data file.
+
+    __transformed_path: str
+        Path to the transformed data file.
+
+    __metadata_path: str
+        Path to the metadata file.
+
+    __info_path: str
+        Path to the info file.
+
+    __metadata: DataFrame
+        Metadata of the transformed data. Contains the column names and their data types.
+
+    __info: DataFrame
+        Info of the transformed data. Contains information that is not used for creating recommendations, but needed to
+        display the results.
+
+    __META_CATEGORIES: Final[list[str]]
+
+    Categories of transformed data columns. Used to build metadata information about the data. This is used to
+    effectively select columns for the recommender system.
+
+    Examples:
+    ---------
+    >>> df = data.iloc[:, metadata[metadata.column_name.isin(['tags', 'genres'])].index]
+    >>> df
+              tags_4-koma tags_Achromatic  ... genres_Supernatural genres_Thriller
+        0             0.0            0.75  ...                   1               1
+        1            0.35             0.0  ...                   0               0
+        2            0.85             0.0  ...                   0               1
+    """
 
     __META_CATEGORIES: Final[list[str]] = [
         'genres',
@@ -31,13 +67,13 @@ class APITransformer(DataFrame, ITransformer):
         super().__init__(data, *args, **kwargs)
 
         if not inner:
-            self.__staged_path = os.environ.get('DATA_PROCESSED_PATH')
-            self.__transformed_path = os.environ.get('DATA_PATH')
-            self.__metadata_path = os.environ.get('METADATA_PATH')
-            self.__info_path = os.environ.get('INFO_PATH')
+            self.__staged_path: str = os.environ.get('DATA_PROCESSED_PATH')
+            self.__transformed_path: str = os.environ.get('DATA_PATH')
+            self.__metadata_path: str = os.environ.get('METADATA_PATH')
+            self.__info_path: str = os.environ.get('INFO_PATH')
 
-            self.__metadata = None
-            self.__info = None
+            self.__metadata: Optional[DataFrame] = None
+            self.__info: Optional[DataFrame] = None
 
             with open(self.__staged_path, 'rb') as f:
                 super().__init__(data=pickle.load(f), *args, **kwargs)
@@ -57,6 +93,7 @@ class APITransformer(DataFrame, ITransformer):
         return info_dict
 
     def __stage(self):
+        """Stage the transformed data, metadata and info to files."""
         logger.info('Staging data...')
 
         self.__info = self[['id', 'description', 'romaji', 'english', 'native', 'large', 'color']]
@@ -131,6 +168,10 @@ class APITransformer(DataFrame, ITransformer):
         return self
 
     def transform_scale(self) -> DataFrame:
+        """Scales the data to a range of 0 to 1.
+
+        This scales continuous data to the same range as one-hot encoded data.
+        """
         logger.info('Scaling numerical columns...')
 
         mm = MinMaxScaler()
@@ -146,6 +187,7 @@ class APITransformer(DataFrame, ITransformer):
         return self
 
     def drop_transformed(self) -> DataFrame:
+        """Drops all columns that not used for recommendations."""
         logger.info('Dropping transformed columns...')
 
         self.drop(

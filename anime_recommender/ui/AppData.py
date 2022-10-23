@@ -2,8 +2,8 @@ from typing import Optional, Type
 
 from pandas import DataFrame
 
-from ..anilist_etl import ITextProcessor, TextProcessor
 from ..client import IClient
+from ..etl import ITextProcessor, TextProcessor
 from ..recommender import IRecommender
 from ..storage import IStorage
 

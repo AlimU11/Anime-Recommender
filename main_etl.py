@@ -3,7 +3,7 @@ import os
 
 import yaml
 
-from anime_recommender.anilist_etl import APIExtractor, APIProcessor, APITransformer
+from anime_recommender.etl import APIExtractor, APIProcessor, APITransformer
 
 # load config variables to environment variables
 with open('global_config.yaml', 'r') as f:

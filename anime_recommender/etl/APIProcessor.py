@@ -10,7 +10,26 @@ from . import IProcessor, stage_file
 
 
 class APIProcessor(DataFrame, IProcessor):
-    """A processor for data retrieved from AniList API."""
+    """DataFrame Adapter for processing data retrieved from AniList API.
+
+    Parameters
+    ----------
+    inner : bool
+        If True, assumes reinitialization of APIProcessor within its method. In this case, will not log initialization
+        info again and reinitialize `staged_path` and `processed_path` attributes with the same values.
+
+    data : DataFrame
+        Data to be passed to DataFrame constructor. Assumed that this parameter is passed only when reinitializing class,
+        thus inner should be True.
+
+    Attributes
+    ----------
+    __staged_path: str
+        Path to the file with staged data. Assumed to be a result of the APIExtractor class.
+
+    __processed_path: str
+        Path to the file with processed data.
+    """
 
     __quarter_dict: Final[dict] = {
         'WINTER': 1,
@@ -30,9 +49,13 @@ class APIProcessor(DataFrame, IProcessor):
         11: 4,
         12: 4,
     }
+    """Dictionary to convert Season feature (or month if season is missing) to corresponding quarter."""
 
     __SEASON_UNDEFINED: Final[str] = 5
+    """Value to fill missing values in the source column."""
+
     __SOURCE_UNDEFINED: Final[str] = 'UNDEFINED'
+    """Value to fill missing values in the season column."""
 
     def __init__(self, inner=False, data=None, *args, **kwargs):
         super().__init__(data, *args, **kwargs)
@@ -47,18 +70,27 @@ class APIProcessor(DataFrame, IProcessor):
 
     @staticmethod
     def __fill_title(row):
+        """Fill missing values in the title column.
+        Performs broadcast from romaji to english and native columns. Assumes that romaji title is always present.
+        """
         row.english = row.english if row.english else row.romaji
         row.native = row.native if row.native else row.romaji
         return row
 
     @staticmethod
-    def __fill_season(row):
+    def __fill_transform_season(row):
+        """Fill missing values in the season column and transform it to corresponding quarter.
+
+        If season is missing, will fill it with the corresponding month from the start date (if present) and convert
+        month or season to the corresponding quarter using the `quarter_dict` dictionary. If both season and month are
+        missing, will fill season with the `SEASON_UNDEFINED` value.
+        """
         row.season = (
             APIProcessor.__quarter_dict[row.season]
             if notna(row.season)
             else APIProcessor.__quarter_dict[row.startDate_month]
             if notna(row.startDate_month)
-            else row.season
+            else APIProcessor.__SEASON_UNDEFINED
         )
 
         return row
@@ -123,9 +155,9 @@ class APIProcessor(DataFrame, IProcessor):
         return self
 
     def drop_na(self):
-        """Drop specified rows with missing values."""
         logger.info('Dropping missing values...')
 
+        # NOTE: Consider not to drop 'RELEASING' and 'NOT_YET_RELEASED' statuses in future updates.
         self.query(
             '''format.notna() and status == 'FINISHED' and episodes.notna() and duration.notna() and startDate_year.notna()''',
             inplace=True,
@@ -135,20 +167,17 @@ class APIProcessor(DataFrame, IProcessor):
         return self
 
     def fill_na(self):
-        """Fill missing values for specified columns in the DataFrame."""
         logger.info('Filling missing values...')
 
         self.__init__(inner=True, data=self.apply(self.__fill_title, axis=1))
-        self.__init__(inner=True, data=self.apply(self.__fill_season, axis=1))
+        self.__init__(inner=True, data=self.apply(self.__fill_transform_season, axis=1))
         self['description'] = self.description.fillna('')
         self['source'] = self.source.fillna(self.__SOURCE_UNDEFINED)
-        self['season'] = self.season.fillna(self.__SEASON_UNDEFINED)
 
         logger.info('Done.')
         return self
 
     def process_pipe(self):
-        """Process DataFrame with all the methods in predefined order."""
         logger.info('Processing data...')
 
         self.__to_frame()
