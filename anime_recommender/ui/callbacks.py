@@ -86,7 +86,6 @@ def update_features_list(value):
         State(IdHolder.included_list.name, 'options'),
         State(IdHolder.excluded_list.name, 'options'),
     ],
-    prevent_initial_call=True,
 )
 def user_lists_mutual_exclusion(included, excluded, included_list, excluded_list):
     excluded_list = [

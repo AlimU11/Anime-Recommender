@@ -246,7 +246,6 @@ modal_body = lambda header, text: [
 ]
 
 user_lists = lambda lists: [
-    html.H4('User lists'),
     html.I(
         [
             'User lists to include or exclude from recommendations. Entries from ',

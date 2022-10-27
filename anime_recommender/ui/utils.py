@@ -150,9 +150,8 @@ def apply_generate(
             user_lists(
                 [{'label': i, 'value': i} for i in list(app_data.client.user_lists.keys())],
             )
-            if app_data.client
-            and app_data.client.user_id
-            and ctx.triggered_id == IdHolder.generate_button.name  # FIXME: does the last statement correct?
+            if app_data.client and app_data.client.user_id
+            # and ctx.triggered_id == IdHolder.generate_button.name  # FIXME: does the last statement correct?
             else columns_container,
             is_weighted,
         ]
