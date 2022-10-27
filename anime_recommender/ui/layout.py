@@ -6,7 +6,7 @@ import pandas as pd
 from dash import dcc, html
 
 from ..storage import LocalStorage
-from . import AppData
+from . import AppData, IdHolder
 
 app = dash.Dash(
     __name__,
@@ -20,6 +20,59 @@ app_data.storage = LocalStorage()
 
 INCLUDED_LISTS = ['Completed']
 EXCLUDED_LISTS = ['Dropped', 'Watching', 'Rewatching', 'Planning', 'Paused']
+
+ITEMS_ENG = app_data.storage.info.english.tolist()
+
+# NOTE: too consumptive without dynamic dropdown
+# ITEMS_ROMAJI = app_data.storage.info.romaji.tolist()
+# ITEMS_NATIVE = app_data.storage.info.native.tolist()
+
+# ITEMS_ENG = [
+#                 {'label': english, 'value': id, 'search': romaji}
+#                 for english, romaji, id
+#                 in zip(
+#                     app_data.storage.info.english.values,
+#                     app_data.storage.info.romaji.values,
+#                     app_data.storage.info.id.values,
+#                 )
+#             ]
+#
+# ITEMS_ROMAJI = [
+#                     {'label': romaji, 'value': id, 'search': romaji}
+#                     for romaji, id
+#                     in zip(
+#                         app_data.storage.info.romaji.values,
+#                         app_data.storage.info.id.values,
+#                     )
+#                 ]
+#
+# ITEMS_NATIVE = [
+#                     {'label': native, 'value': id, 'search': romaji}
+#                     for native, romaji, id
+#                     in zip(
+#                         app_data.storage.info.native.values,
+#                         app_data.storage.info.romaji.values,
+#                         app_data.storage.info.id.values,
+#                     )
+#                 ]
+
+language_options_username = [
+    dbc.DropdownMenuItem('english', id=IdHolder.english_username.name),
+    # dbc.DropdownMenuItem('romaji', id=IdHolder.romaji_username.name),
+    # dbc.DropdownMenuItem('native', id=IdHolder.native_username.name),
+]
+
+language_options_titles = [
+    dbc.DropdownMenuItem('english', id=IdHolder.english.name),
+    # dbc.DropdownMenuItem('romaji', id=IdHolder.romaji.name),
+    # dbc.DropdownMenuItem('native', id=IdHolder.native.name),
+]
+
+source_options = [
+    dbc.DropdownMenuItem('Anilist', id=IdHolder.Anilist.name),
+    # dbc.DropdownMenuItem('romaji', id=IdHolder.romaji.name),
+    # dbc.DropdownMenuItem('native', id=IdHolder.native.name),
+]
 
 ########################################################################################################################
 #                                                Dynamic content                                                       #
@@ -61,7 +114,7 @@ alert = lambda text: dbc.Alert(
     style={'height': 'fit-content', 'margin-top': '0rem'},
 )
 
-card = lambda s: dbc.Card(  # TODO: replace `english` with proper lang title
+card = lambda s: dbc.Card(
     [
         dbc.CardBody(
             [
@@ -97,7 +150,7 @@ card = lambda s: dbc.Card(  # TODO: replace `english` with proper lang title
                     [
                         html.H6(
                             html.A(
-                                f'''{s.english[:24]}{'...' if len(s.english) > 24 else ''}''',
+                                f'''{s[app_data.language][:24]}{'...' if len(s[app_data.language]) > 24 else ''}''',
                                 href=f'''https://anilist.co/anime/{s['id']}''',
                                 target='_blank',
                                 style={
@@ -140,7 +193,9 @@ card = lambda s: dbc.Card(  # TODO: replace `english` with proper lang title
                     },
                     className='mt-auto',
                 ),
-                tooltip(s.english, f'''tooltip-title-{s['id']}''', 'top') if len(s.english) > 24 else '',
+                tooltip(s[app_data.language], f'''tooltip-title-{s['id']}''', 'top')
+                if len(s[app_data.language]) > 24
+                else '',
                 html.A(
                     className='stretched-link',
                     href=f'''https://anilist.co/anime/{s['id']}''',
@@ -180,7 +235,14 @@ card = lambda s: dbc.Card(  # TODO: replace `english` with proper lang title
 modal_body = lambda header, text: [
     dbc.ModalHeader(dbc.ModalTitle(header)),
     dbc.ModalBody(text),
-    dbc.ModalFooter(dbc.Button('Close', id='close-button', className='ms-auto', n_clicks=0)),
+    dbc.ModalFooter(
+        dbc.Button(
+            'Close',
+            id=IdHolder.close_button.name,
+            className='ms-auto',
+            n_clicks=0,
+        ),
+    ),
 ]
 
 user_lists = lambda lists: [
@@ -199,30 +261,46 @@ user_lists = lambda lists: [
     dbc.Checklist(
         options=lists,
         value=INCLUDED_LISTS,
-        id='checklist-included',
+        id=IdHolder.included_list.name,
     ),
     html.H5('Excluded:'),
     dbc.Checklist(
         options=lists,
         value=EXCLUDED_LISTS,
-        id='checklist-excluded',
+        id=IdHolder.excluded_list.name,
     ),
 ]
+
+alert_features = dbc.Alert(
+    [
+        html.I(className='bi bi-info-circle-fill me-2'),
+        'At least one feature must be selected',
+    ],
+    color='info',
+    className='d-flex align-items-center',
+    style={
+        'height': 'fit-content',
+        'font-size': '0.8em',
+        'margin': '0px',
+        'margin-bottom': '1rem',
+        'padding': '2px 5px',
+    },
+)
 
 ########################################################################################################################
 #                                                  Main layout                                                         #
 ########################################################################################################################
 
-search_switch = dbc.Col(
+search_type_switch = dbc.Col(
     [
         dbc.Switch(
-            id='search-switch',
+            id=IdHolder.search_type_switch.name,
             label='By username',
             value=False,
         ),
         # html.Div("By username")
     ],
-    align='center',
+    align='top',
     width=2,
     style={'width': '170px'},
 )
@@ -231,38 +309,61 @@ search_input = dbc.Col(
     [
         dbc.InputGroup(
             [
+                dbc.DropdownMenu(
+                    source_options,
+                    label=f'Anilist',
+                    id=IdHolder.username_source.name,
+                ),  # TODO: add more sources
                 dbc.InputGroupText('@'),
                 dbc.Input(
-                    placeholder='Anilist Username, e.g. "AlimU"',
-                    id='search-user-input',
+                    placeholder='Username',
+                    id=IdHolder.username_searchbar.name,
                     type='text',
                 ),
+                dbc.DropdownMenu(
+                    language_options_username,
+                    label='english',
+                    id=IdHolder.titles_language_username.name,
+                ),  # TODO: add more languages
             ],
             style={'height': '100%', 'margin': '0px'},
         ),
     ],
     style={'background-f': 'white', 'margin-left': '2rem'},
-    id='search-user-input-container',
+    id=IdHolder.username_searchbar_container.name,
     align='center',
 )
 
 search_input1 = dbc.Col(
     [
-        dcc.Dropdown(
-            app_data.storage.info.english.unique().tolist(),  # TODO: add other languages
-            multi=True,
-            id='search-titles-input',
+        dbc.ListGroup(
+            [
+                dcc.Dropdown(
+                    ITEMS_ENG,
+                    # app_data.storage.info.english.unique().tolist(),
+                    placeholder='Type to search',
+                    multi=True,
+                    id=IdHolder.item_searchbar.name,
+                    style={'width': '100%'},
+                ),
+                dbc.DropdownMenu(
+                    language_options_titles,
+                    label='english',
+                    id=IdHolder.titles_language_titles.name,
+                ),
+            ],
+            className='list-group-horizontal',
         ),
     ],
     style={'background-color': 'white', 'margin-left': '2rem', 'display': 'none'},
-    id='search-title-input-container',
+    id=IdHolder.item_searchbar_container.name,
 )
 
-search_button = dbc.Col(
+generate_button = dbc.Col(
     dbc.Button(
         'Generate',
         color='primary',
-        id='generate-recommendations-button',
+        id=IdHolder.generate_button.name,
     ),
     width=2,
     style={'background-color': 'white'},
@@ -273,23 +374,23 @@ searchbar = dbc.Row(
         dbc.Col(
             dbc.Row(
                 [
-                    search_switch,
+                    search_type_switch,
                     search_input,
                     search_input1,
                 ],
             ),
         ),
-        search_button,
+        generate_button,
     ],
-    style={'background-color': 'white', 'height': '100px'},
+    style={'background-color': 'white', 'min-height': '100px'},
 )
 
-output = dbc.Row(
+output_container = dbc.Row(
     [
         dbc.Spinner(
             dbc.Col(
                 [],
-                id='output',
+                id=IdHolder.output_container.name,
             ),
         ),
     ],
@@ -303,7 +404,7 @@ main = dbc.Col(
                 [
                     html.H2('Anime Recommender', style={'margin-bottom': '2rem'}),
                     searchbar,
-                    output,
+                    output_container,
                 ],
             ),
             style={
@@ -350,10 +451,8 @@ header = dbc.Row(
     ],
 )
 
-engine = dbc.AccordionItem(
+recommender_type = dbc.AccordionItem(
     [
-        #  question_mark('tooltip-engine'),
-        #  tooltip('linear_kernel, rbf_kernel', 'tooltip-engine', 'right'),
         html.P(
             html.I(
                 'Recommendation engine stands for the algorithm used to generate recommendations. Standard (linear kernel) is the default engine and works good for most cases. Experimental (rbf kernel) is awful for large number of titles, but can give some interesting results for individual one(s).',
@@ -366,22 +465,22 @@ engine = dbc.AccordionItem(
                 {'label': 'Experimental', 'value': 'rbf_kernel'},
             ],
             value='linear_kernel',
-            id='radio-input-engine',
+            id=IdHolder.recommender_type.name,
             style={'cursor': 'pointer'},
         ),
     ],
     title='Recommendation Engine',
 )
 
-columns_container = dbc.AccordionItem(
+user_lists_container = dbc.AccordionItem(
     user_lists([]),
     title='User Lists',
-    id='columns-container',
+    id=IdHolder.user_lists.name,
     className='user-lists-container',
 )
 
 feature_options = [
-    {'label': 'Tags', 'value': 'tags'},
+    {'label': 'Tags', 'value': 'tags', 'disabled': True},
     {'label': 'Genres', 'value': 'genres'},
     {'label': 'Average Score', 'value': 'mean_score'},
     {'label': 'Format', 'value': 'format'},
@@ -408,12 +507,6 @@ scaled_options = [
 
 included_features = dbc.AccordionItem(
     [
-        #  question_mark('tooltip-features'),
-        #  tooltip(
-        #      'genres, tags, studios, description, average score, etc...',
-        #      'tooltip-features',
-        #      'right',
-        #  ),
         html.P(
             html.I(
                 'Each title has individual features that make it unique and distinguish from others. Those features could be included in calculation and potentially affect recommendation results. The further information about each feature is presented below.',
@@ -425,20 +518,30 @@ included_features = dbc.AccordionItem(
                 [
                     html.Ol(
                         [
-                            html.Li('Tags: list of tags that title belongs to with their respective scores.'),
+                            html.Li(
+                                'Tags: list of tags that title belongs to with their respective scores.',
+                            ),
                             html.Li('Genres: list of genres that title belongs to.'),
                             html.Li('Average Score: average score of title.'),
                             html.Li('Format: format of title (TV, Movie, etc...).'),
                             html.Li('Number of Episodes: number of episodes in title.'),
                             html.Li('Duration: duration of each episode in minutes.'),
-                            html.Li('Source: source of title (Manga, Light Novel, etc...).'),
+                            html.Li(
+                                'Source: source of title (Manga, Light Novel, etc...).',
+                            ),
                             html.Li('Origin: origin of title (Japan, China, etc...).'),
-                            html.Li('Season: season of release (Winter, Spring, etc...).'),
+                            html.Li(
+                                'Season: season of release (Winter, Spring, etc...).',
+                            ),
                             html.Li('Is Adult: whether title is adult or not.'),
-                            html.Li('Favorites: number of users that added title to their favorites.'),
+                            html.Li(
+                                'Favorites: number of users that added title to their favorites.',
+                            ),
                             html.Li('Popularity: AniList popularity score.'),
                             html.Li('Studios: list of studios that worked on title.'),
-                            html.Li('Producers: list of producers that worked on title.'),
+                            html.Li(
+                                'Producers: list of producers that worked on title.',
+                            ),
                         ],
                     ),
                 ],
@@ -447,11 +550,11 @@ included_features = dbc.AccordionItem(
             ),
             start_collapsed=True,
         ),
-        html.Div([], id='alert-included-features'),
+        html.Div([], id=IdHolder.features_alert.name),
         dbc.Checklist(
             options=feature_options,
             value=['tags'],
-            id='checklist-features',
+            id=IdHolder.features_list.name,
             style={'cursor': 'pointer'},
         ),
     ],
@@ -463,8 +566,6 @@ weighted_container = dbc.Container(
         html.H5(
             [
                 'Weighted',
-                # question_mark('tooltip-weighted'),
-                # tooltip('count user score', 'tooltip-weighted', 'right'),
             ],
         ),
         html.I(
@@ -474,11 +575,11 @@ weighted_container = dbc.Container(
         dbc.Checklist(
             options=weighted_options,
             value=[True],
-            id='checklist-weighted',
+            id=IdHolder.is_weighted.name,
             style={'cursor': 'pointer'},
         ),
     ],
-    id='container-weighted',
+    id=IdHolder.weighted_container.name,
 )
 
 scaled_container = dbc.Container(
@@ -486,8 +587,6 @@ scaled_container = dbc.Container(
         html.H5(
             [
                 'Scaled',
-                # question_mark('tooltip-scaled'),
-                # tooltip('scale user scores', 'tooltip-scaled', 'right'),
             ],
         ),
         html.I(
@@ -506,11 +605,11 @@ scaled_container = dbc.Container(
         dbc.Checklist(
             options=scaled_options,
             value=[],
-            id='checklist-scaled',
+            id=IdHolder.is_scaled.name,
             style={'cursor': 'pointer'},
         ),
     ],
-    id='container-scaled',
+    id=IdHolder.scaled_container.name,
 )
 
 score_container = dbc.AccordionItem(
@@ -519,13 +618,13 @@ score_container = dbc.AccordionItem(
         scaled_container,
         dbc.Container(
             [
-                html.P('', id='scale-text'),
-                dcc.Graph(id='graph'),
+                html.P('', id=IdHolder.score_description.name),
+                dcc.Graph(id=IdHolder.graph.name),
                 dcc.RangeSlider(
                     min=-10,
                     max=10,
                     value=[-5, 4],
-                    id='scale-slider',
+                    id=IdHolder.scale_slider.name,
                     updatemode='drag',
                     tooltip={'placement': 'bottom', 'always_visible': True},
                     allowCross=False,
@@ -534,23 +633,28 @@ score_container = dbc.AccordionItem(
                     marks={i: str(i) for i in range(-10, 11, 2)},
                 ),
                 html.Div(
-                    dbc.Button('Reset', id='reset-graph', size='sm', class_name=''),
+                    dbc.Button(
+                        'Reset',
+                        id=IdHolder.reset_graph_button.name,
+                        size='sm',
+                        class_name='',
+                    ),
                     className='reset-button-container',
                 ),
             ],
-            id='scale-graph-container',
+            id=IdHolder.graph_container.name,
             style={'display': 'none', 'padding': '0'},
         ),
     ],
     title='Score',
-    id='score-container',
+    id=IdHolder.score_container.name,
 )
 
 apply_button = html.Div(
     dbc.Button(
         'Apply',
         color='primary',
-        id='apply-parameters-button',
+        id=IdHolder.apply_button.name,
         style={
             'position': 'relative',
             'margin-left': 'auto',
@@ -565,8 +669,8 @@ parameters = dbc.Row(
     [
         dbc.Accordion(
             [
-                engine,
-                columns_container,
+                recommender_type,
+                user_lists_container,
                 included_features,
                 score_container,
             ],
@@ -610,7 +714,7 @@ app.layout = dbc.Card(
                             className='bi bi-info-lg',
                             style={'font-weight': 'bold'},
                         ),
-                        id='positioned-toast-toggle',
+                        id=IdHolder.info_button.name,
                         color='primary',
                         n_clicks=0,
                         style={
@@ -627,7 +731,11 @@ app.layout = dbc.Card(
                         html.P(
                             [
                                 html.B('Anilist: '),
-                                html.A('AlimU', href='https://anilist.co/user/AlimU/', target='_blank'),
+                                html.A(
+                                    'AlimU',
+                                    href='https://anilist.co/user/AlimU/',
+                                    target='_blank',
+                                ),
                                 html.Br(),
                                 html.B('GitHub: '),
                                 html.A(
@@ -643,7 +751,7 @@ app.layout = dbc.Card(
                             ],
                             style={'margin-bottom': '0'},
                         ),
-                        id='positioned-toast',
+                        id=IdHolder.info_container.name,
                         header='Contacts',
                         is_open=False,
                         dismissable=True,
@@ -665,7 +773,7 @@ app.layout = dbc.Card(
                 [
                     modal_body('', ''),
                 ],
-                id='modal',
+                id=IdHolder.modal_notification.name,
                 is_open=False,
             ),
         ],

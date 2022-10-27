@@ -101,9 +101,13 @@ class LocalStorage(IStorage):
         self.__data_path: str = os.environ.get('DATA_PATH')
         self.__metadata_path: str = os.environ.get('METADATA_PATH')
         self.__info_path: str = os.environ.get('INFO_PATH')
-        self.__data: DataFrame = LocalStorage.__format[self.__data_path.split('.')[-1]](self.__data_path)
+        self.__data: DataFrame = LocalStorage.__format[self.__data_path.split('.')[-1]](
+            self.__data_path,
+        )
         self.__metadata: DataFrame = LocalStorage.__format[self.__metadata_path.split('.')[-1]](self.__metadata_path)
-        self.__info: DataFrame = LocalStorage.__format[self.__info_path.split('.')[-1]](self.__info_path)
+        self.__info: DataFrame = LocalStorage.__format[self.__info_path.split('.')[-1]](
+            self.__info_path,
+        )
         self.__mapping: dict[int, int] = {
             key: value for value, key in self.__data.reset_index().iloc[:, :2].values.tolist()
         }
@@ -137,4 +141,4 @@ class LocalStorage(IStorage):
 
     @property
     def info(self) -> DataFrame:
-        return self.__info  # TODO: replace english
+        return self.__info

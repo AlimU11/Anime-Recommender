@@ -38,7 +38,7 @@ class AppData:
 
     __excluded_lists : list[str]
 
-    __weighted : bool
+    __is_weighted : bool
 
     __scaled : bool
 
@@ -57,15 +57,16 @@ class AppData:
         self.__client: Optional[IClient] = None
         self.__storage: Optional[IStorage] = None
         self.__recommender: Optional[IRecommender] = None
-        self.__similarity_method: Optional[str] = None
+        self.__recommender_type: Optional[str] = None
         self.__columns: list[str] = []
         self.__included_lists: list[str] = []
         self.__excluded_lists: list[str] = []
-        self.__weighted: bool = False
+        self.__is_weighted: bool = False
         self.__scaled: bool = False
         self.__scale_range: list[float] = []
         self.__type_switch: bool = False
         self.__input_values: list[str] = []
+        self.__language: str = 'english'
         self.__df: Optional[DataFrame] = None
         self.__text_processor: Type[ITextProcessor] = TextProcessor
 
@@ -97,13 +98,13 @@ class AppData:
         self.__recommender = recommender
 
     @property
-    def similarity_method(self) -> Optional[str]:
+    def recommender_type(self) -> Optional[str]:
         """Similarity method used by recommender. Stores last chosen similarity method (`str`, optional)."""
-        return self.__similarity_method
+        return self.__recommender_type
 
-    @similarity_method.setter
-    def similarity_method(self, similarity_method: str):
-        self.__similarity_method = similarity_method
+    @recommender_type.setter
+    def recommender_type(self, similarity_method: str):
+        self.__recommender_type = similarity_method
 
     @property
     def columns(self) -> list[str]:
@@ -133,13 +134,13 @@ class AppData:
         self.__excluded_lists = excluded_lists
 
     @property
-    def weighted(self) -> bool:
+    def is_weighted(self) -> bool:
         """Weighted flag used by recommender. Stores last chosen weighted flag (`bool`)."""
-        return self.__weighted
+        return self.__is_weighted
 
-    @weighted.setter
-    def weighted(self, weighted: bool):
-        self.__weighted = weighted
+    @is_weighted.setter
+    def is_weighted(self, weighted: bool):
+        self.__is_weighted = weighted
 
     @property
     def scaled(self) -> bool:
@@ -177,6 +178,15 @@ class AppData:
     @input_values.setter
     def input_values(self, input_values: list[str]):
         self.__input_values = input_values
+
+    @property
+    def language(self) -> str:
+        """Language for titles (`str`)."""
+        return self.__language
+
+    @language.setter
+    def language(self, language: str):
+        self.__language = language
 
     @property
     def df(self) -> DataFrame:

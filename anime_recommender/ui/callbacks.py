@@ -1,25 +1,33 @@
 import tracemalloc  # isort:skip
-
 import dash_bootstrap_components as dbc
 import numpy as np
 import plotly.graph_objects as go
 from dash import Dash, Input, Output, State, ctx, dcc, html
+from dash.exceptions import PreventUpdate
 from sklearn.preprocessing import MinMaxScaler, minmax_scale
 
-from .layout import app, feature_options
+from . import IdHolder
+from .layout import (  # , ITEMS_NATIVE, ITEMS_ROMAJI
+    ITEMS_ENG,
+    alert_features,
+    app,
+    app_data,
+    feature_options,
+)
 from .utils import dispatcher
 
 
 @app.callback(
     [
-        Output('search-user-input-container', 'style'),
-        Output('search-title-input-container', 'style'),
-        Output('search-switch', 'label'),
-        Output('score-container', 'style'),
+        Output(IdHolder.username_searchbar_container.name, 'style'),
+        Output(IdHolder.item_searchbar_container.name, 'style'),
+        Output(IdHolder.search_type_switch.name, 'label'),
+        Output(IdHolder.score_container.name, 'style'),
     ],
-    Input('search-switch', 'value'),
+    Input(IdHolder.search_type_switch.name, 'value'),
+    prevent_initial_call=True,
 )
-def search_switch(value):
+def change_search_type(value):
     return (
         [{'display': 'none'}, {'display': 'block'}, 'By title', {'display': 'none'}]
         if value
@@ -34,12 +42,13 @@ def search_switch(value):
 
 @app.callback(
     [
-        Output('checklist-features', 'options'),
-        Output('alert-included-features', 'children'),
+        Output(IdHolder.features_list.name, 'options'),
+        Output(IdHolder.features_alert.name, 'children'),
     ],
-    Input('checklist-features', 'value'),
+    Input(IdHolder.features_list.name, 'value'),
+    prevent_initial_call=True,
 )
-def update_multi_options(value):
+def update_features_list(value):
     options = feature_options
     if len(value) == 1:
         options = [
@@ -51,40 +60,35 @@ def update_multi_options(value):
             for option in options
         ]
 
-    alert = dbc.Alert(
-        [
-            html.I(className='bi bi-info-circle-fill me-2'),
-            'At least one feature must be selected',
-        ],
-        color='info',
-        className='d-flex align-items-center',
-        style={
-            'height': 'fit-content',
-            'font-size': '0.8em',
-            'margin': '0px',
-            'margin-bottom': '1rem',
-            'padding': '2px 5px',
-        },
-    )
+    else:
+        options = [
+            {
+                'label': option['label'],
+                'value': option['value'],
+                'disabled': False,
+            }
+            for option in options
+        ]
 
-    return [options, alert if len(value) == 1 else None]
+    return [options, alert_features if len(value) == 1 else None]
 
 
 @app.callback(
     [
-        Output('checklist-included', 'options'),
-        Output('checklist-excluded', 'options'),
+        Output(IdHolder.included_list.name, 'options'),
+        Output(IdHolder.excluded_list.name, 'options'),
     ],
     [
-        Input('checklist-included', 'value'),
-        Input('checklist-excluded', 'value'),
+        Input(IdHolder.included_list.name, 'value'),
+        Input(IdHolder.excluded_list.name, 'value'),
     ],
     [
-        State('checklist-included', 'options'),
-        State('checklist-excluded', 'options'),
+        State(IdHolder.included_list.name, 'options'),
+        State(IdHolder.excluded_list.name, 'options'),
     ],
+    prevent_initial_call=True,
 )
-def lists_mutual_exclusion(included, excluded, included_list, excluded_list):
+def user_lists_mutual_exclusion(included, excluded, included_list, excluded_list):
     excluded_list = [
         {'label': i['label'], 'value': i['value'], 'disabled': False}
         if i['value'] not in included
@@ -103,34 +107,41 @@ def lists_mutual_exclusion(included, excluded, included_list, excluded_list):
 
 
 @app.callback(
-    Output('container-scaled', 'style'),
-    Input('checklist-weighted', 'value'),
+    Output(IdHolder.scaled_container.name, 'style'),
+    Input(IdHolder.is_weighted.name, 'value'),
+    prevent_initial_call=True,
 )
 def update_scaled(value):
     return {'display': 'block'} if value else {'display': 'none'}
 
 
 @app.callback(
-    Output('scale-graph-container', 'style'),
+    Output(IdHolder.graph_container.name, 'style'),
     [
-        Input('checklist-scaled', 'value'),
-        Input('checklist-weighted', 'value'),
+        Input(IdHolder.is_scaled.name, 'value'),
+        Input(IdHolder.is_weighted.name, 'value'),
     ],
+    prevent_initial_call=True,
 )
-def change_visibility(v1, v2):
+def update_scaled_container(v1, v2):
     return {'display': 'block'} if v1 and v2 else {'display': 'none'}
 
 
 @app.callback(
     [
-        Output('graph', 'figure'),
-        Output('scale-slider', 'value'),
-        Output('scale-text', 'children'),
+        Output(IdHolder.graph.name, 'figure'),
+        Output(IdHolder.scale_slider.name, 'value'),
+        Output(IdHolder.score_description.name, 'children'),
     ],
-    [Input('scale-slider', 'value'), Input('reset-graph', 'n_clicks')],
+    [
+        Input(IdHolder.scale_slider.name, 'value'),
+        Input(IdHolder.reset_graph_button.name, 'n_clicks'),
+    ],
 )
-def update_output(value, btn):
-    normal_scores = np.array([i for i in minmax_scale(np.arange(1, 11), feature_range=(1, 10))])
+def update_scaled_graph(value, btn):
+    normal_scores = np.array(
+        [i for i in minmax_scale(np.arange(1, 11), feature_range=(1, 10))],
+    )
     index = np.arange(1, 11)
     value = [-5, 4] if ctx.triggered_id == 'button' else value
 
@@ -138,15 +149,14 @@ def update_output(value, btn):
     mm.fit(np.arange(1, 11).reshape(-1, 1))
 
     scaled_scores = minmax_scale(
-        np.array([1 / (1 + np.exp(-i)) for i in mm.transform(np.arange(1, 11).reshape(-1, 1))]).flatten(),
+        np.array(
+            [1 / (1 + np.exp(-i)) for i in mm.transform(np.arange(1, 11).reshape(-1, 1))],
+        ).flatten(),
         feature_range=(1, 10),
     )
 
     where = np.argwhere(scaled_scores[1:-1] >= normal_scores[1:-1])
     val = normal_scores[where[0]][0] if where.shape[0] > 0 else 10
-
-    # lower = f'All titles with scores <b>below {val+1 if val != 10 else val}</b> will have <b>less</b> impact.' if val != 1 else ''
-    # higher = f'<br>All titles with scores <b>higher than {val}</b> will have <b>more</b> impact.' if val != 10 else ''
 
     lower = (
         [
@@ -160,6 +170,7 @@ def update_output(value, btn):
         if val != 1
         else ['']
     )
+
     higher = (
         [
             'All titles with scores ',
@@ -172,12 +183,19 @@ def update_output(value, btn):
         else ['']
     )
 
-    fig = go.Figure(go.Scatter(x=index, y=scaled_scores, name='<b>Scaled Scores</b>'))
+    fig = go.Figure()
+
+    fig.add_trace(go.Scatter(x=index, y=scaled_scores, name='<b>Scaled Scores</b>'))
     fig.add_trace(go.Scatter(x=index, y=normal_scores, name='<b>Normal Scores</b>'))
-    fig.update_layout(title='', title_x=0.5, title_y=0.93, title_font_size=10)
-    fig.update_layout(xaxis_title='Score', yaxis_title='Coefficient')
-    fig.update_layout(hovermode='x unified')
+
     fig.update_layout(
+        title='',
+        title_x=0.5,
+        title_y=0.93,
+        title_font_size=10,
+        xaxis_title='Score',
+        yaxis_title='Coefficient',
+        hovermode='x unified',
         legend=dict(
             yanchor='top',
             y=-0.05,
@@ -186,9 +204,12 @@ def update_output(value, btn):
             bgcolor='rgba(0,0,0,0)',
             orientation='h',
         ),
+        margin=dict(l=0, r=0, t=20, b=0),
     )
+
+    fig.update_xaxes(title='', ticklabelposition='inside')
     fig.update_yaxes(ticklabelposition='inside top', title=None)
-    fig.update_xaxes(title='')
+
     fig.add_annotation(
         x=0.5,
         y=-0.05,
@@ -198,20 +219,17 @@ def update_output(value, btn):
         text='<b>Score<b>',
         font=dict(size=14),
     )
-    fig.update_xaxes(ticklabelposition='inside')
-    fig.update_layout(
-        margin=dict(l=0, r=0, t=20, b=0),
-    )
 
     return [fig, value, html.P(higher + lower)]
 
 
 @app.callback(
-    Output('positioned-toast', 'is_open'),
-    Input('positioned-toast-toggle', 'n_clicks'),
-    State('positioned-toast', 'is_open'),
+    Output(IdHolder.info_container.name, 'is_open'),
+    Input(IdHolder.info_button.name, 'n_clicks'),
+    State(IdHolder.info_container.name, 'is_open'),
+    prevent_initial_call=True,
 )
-def open_toast(n, is_open):
+def update_info_toast(n, is_open):
     if n and not is_open:
         return True
     return False
@@ -219,78 +237,124 @@ def open_toast(n, is_open):
 
 @app.callback(
     [
-        Output('output', 'children'),
-        Output('modal', 'is_open'),
-        Output('modal', 'children'),
-        Output('columns-container', 'style'),
-        Output('columns-container', 'children'),
-        Output('checklist-weighted', 'value'),
+        Output(IdHolder.titles_language_titles.name, 'label'),
+        Output(IdHolder.titles_language_username.name, 'label'),
     ],
     [
-        Input('generate-recommendations-button', 'n_clicks'),
-        Input('apply-parameters-button', 'n_clicks'),
-        Input('close-button', 'n_clicks'),
-        Input('search-switch', 'value'),
-    ],
-    [
-        State('output', 'children'),
-        State('search-user-input', 'value'),
-        State('radio-input-engine', 'value'),
-        State('modal', 'is_open'),
-        State('checklist-features', 'value'),
-        State('checklist-weighted', 'value'),
-        State('checklist-scaled', 'value'),
-        State('scale-slider', 'value'),
-        State('checklist-included', 'value'),
-        State('checklist-excluded', 'value'),
-        State('columns-container', 'style'),
-        State('columns-container', 'children'),
-        State('search-titles-input', 'value'),
+        Input(i, 'n_clicks')
+        for i in [
+            IdHolder.english.name,
+            # IdHolder.romaji.name,
+            # IdHolder.native.name,
+        ]
+    ]
+    + [
+        Input(i, 'n_clicks')
+        for i in [
+            IdHolder.english_username.name,
+            # IdHolder.romaji_username.name,
+            # IdHolder.native_username.name,
+        ]
     ],
     prevent_initial_call=True,
 )
-def multi_output(
+def mutual_update_dropdown_language(*args):
+    if not ctx.triggered:
+        return [IdHolder.english.name, IdHolder.english.name]
+    else:
+        return [
+            ctx.triggered[0]['prop_id'].split('.')[0].split('_')[0],
+            ctx.triggered[0]['prop_id'].split('.')[0].split('_')[0],
+        ]
+
+
+@app.callback(
+    [
+        Output(IdHolder.item_searchbar.name, 'options'),
+    ],
+    [
+        Input(IdHolder.titles_language_titles.name, 'label'),
+    ],
+    prevent_initial_call=True,
+)
+def update_items_dropdown(language):
+    if language == 'english':
+        items = ITEMS_ENG
+    # elif language == 'romaji':
+    #     items = ITEMS_ROMAJI
+    # elif language == 'native':
+    #     items = ITEMS_NATIVE
+
+    return [items]
+
+
+@app.callback(
+    [
+        Output(IdHolder.output_container.name, 'children'),
+        Output(IdHolder.modal_notification.name, 'is_open'),
+        Output(IdHolder.modal_notification.name, 'children'),
+        Output(IdHolder.user_lists.name, 'style'),
+        Output(IdHolder.user_lists.name, 'children'),
+        Output(IdHolder.is_weighted.name, 'value'),
+    ],
+    [
+        Input(IdHolder.generate_button.name, 'n_clicks'),
+        Input(IdHolder.apply_button.name, 'n_clicks'),
+        Input(IdHolder.close_button.name, 'n_clicks'),
+        Input(IdHolder.search_type_switch.name, 'value'),
+    ],
+    [
+        State(IdHolder.output_container.name, 'children'),
+        State(IdHolder.username_searchbar.name, 'value'),
+        State(IdHolder.recommender_type.name, 'value'),
+        State(IdHolder.modal_notification.name, 'is_open'),
+        State(IdHolder.features_list.name, 'value'),
+        State(IdHolder.is_weighted.name, 'value'),
+        State(IdHolder.is_scaled.name, 'value'),
+        State(IdHolder.scale_slider.name, 'value'),
+        State(IdHolder.included_list.name, 'value'),
+        State(IdHolder.excluded_list.name, 'value'),
+        State(IdHolder.user_lists.name, 'style'),
+        State(IdHolder.user_lists.name, 'children'),
+        State(IdHolder.item_searchbar.name, 'value'),
+        State(IdHolder.titles_language_titles.name, 'label'),
+    ],
+    prevent_initial_call=True,
+)
+def dispatch(
     _,
     _1,
     _2,
     type_switch,
     output_content,
-    search_value,
-    similarity_method,
+    username,
+    recommender_type,
     is_open,
     columns,
-    weighted,
+    is_weighted,
     scaled,
     scale_slider,
     included,
     excluded,
     style,
     columns_container,
-    input_values,
+    item_values,
+    language,
 ):
-    # tracemalloc.start()
-
-    d = dispatcher(
+    return dispatcher(
         type_switch,
         output_content,
-        search_value,
-        similarity_method,
+        username,
+        recommender_type,
         is_open,
         columns,
-        weighted,
+        is_weighted,
         scaled,
         scale_slider,
         included,
         excluded,
         style,
         columns_container,
-        input_values,
+        item_values,
+        language,
     )
-
-    # curr, peak = tracemalloc.get_traced_memory()
-    # print(
-    #     f'AFTER DISPATCH Current memory usage is {peak / 10**6:.2f} MB; Peak was {peak / 10**6:.2f} MB',
-    # )
-    # tracemalloc.stop()
-
-    return d

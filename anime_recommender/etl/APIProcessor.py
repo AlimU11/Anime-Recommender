@@ -65,8 +65,21 @@ class APIProcessor(DataFrame, IProcessor):
             self.__processed_path = os.environ.get('DATA_PROCESSED_PATH')
 
             logger.info('APIProcessor initialized.')
-            logger.info(f'Loading data from "{self.__staged_path}"')
-            logger.info(f'Staging processed data to "{self.__processed_path}"')
+            logger.info('\n' + self.__repr__())
+
+    def __repr__(self):
+        return ''.join(
+            [
+                f'APIProcessor(\n',
+                f'  staged_path={self.__staged_path}\n',
+                f'  processed_path={self.__processed_path}\n',
+                f'{super().__repr__()}\n',
+                f')',
+            ],
+        )
+
+    def __str__(self):
+        return self.__repr__()
 
     @staticmethod
     def __fill_title(row):
@@ -137,7 +150,7 @@ class APIProcessor(DataFrame, IProcessor):
                             if not data[i]['studios']['edges'][k]['isMain']
                         ],
                     }
-                    for i in range(0, len(data))
+                    for i in range(len(data))
                 ],
             ),
         )

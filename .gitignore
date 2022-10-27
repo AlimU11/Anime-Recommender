@@ -1,8 +1,7 @@
 .idea
-
 data/*
 !data/anilist_meta_staged.pickle
-
+cache-directory/
 /.mypy_cache/
 .ipynb_checkpoints
 __pycache__

@@ -79,6 +79,25 @@ class APITransformer(DataFrame, ITransformer):
                 super().__init__(data=pickle.load(f), *args, **kwargs)
 
             logger.info('APITransformer initialized.')
+            logger.info('\n' + self.__repr__())
+
+    def __repr__(self):
+        return ''.join(
+            [
+                f'APITransformer(\n',
+                f'  staged_path={self.__staged_path}\n',
+                f'  transformed_path={self.__transformed_path}\n',
+                f'  metadata_path={self.__metadata_path}\n',
+                f'  info_path={self.__info_path}\n',
+                f'  metadata={self.__metadata}\n',
+                f'  info={self.__info}\n',
+                f'{super().__repr__()}\n',
+                f')',
+            ],
+        )
+
+    def __str__(self):
+        return self.__repr__()
 
     @staticmethod
     def __get_row(s: Series, info_dict: dict, column: str, mode: str) -> dict:
@@ -97,12 +116,19 @@ class APITransformer(DataFrame, ITransformer):
         logger.info('Staging data...')
 
         self.__info = self[['id', 'description', 'romaji', 'english', 'native', 'large', 'color']]
-        self.drop(['description', 'romaji', 'english', 'native', 'large', 'color'], axis=1, inplace=True)
+        self.drop(
+            ['description', 'romaji', 'english', 'native', 'large', 'color'],
+            axis=1,
+            inplace=True,
+        )
 
         self.__metadata = self.dtypes.to_frame().reset_index().rename({'index': 'column_name', 0: 'dtype'}, axis=1)
 
         for column in APITransformer.__META_CATEGORIES:
-            self.__metadata.loc[self.__metadata.column_name.str.startswith(column + '_'), 'column_name'] = column
+            self.__metadata.loc[
+                self.__metadata.column_name.str.startswith(column + '_'),
+                'column_name',
+            ] = column
 
         stage_file(self.__info, self.__info_path)
         stage_file(self.__metadata, self.__metadata_path)

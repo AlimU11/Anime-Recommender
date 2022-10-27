@@ -35,3 +35,12 @@ DATA_PROCESSED_PATH: data/anilist_processed.pickle
 
 # MAX_PER_PAGE - specifies the maximum number of records to be returned per page
 MAX_PER_PAGE: 50
+
+# API_URL - specifies the url of the API
+API_URL: https://graphql.anilist.co
+
+# API_PERIOD - specifies the period of time in seconds for which the `API_LIMIT` specified
+API_PERIOD: 60
+
+# API_LIMIT - specifies the maximum number of requests per period
+API_LIMIT: 90

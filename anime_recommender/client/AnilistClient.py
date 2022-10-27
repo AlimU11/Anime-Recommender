@@ -44,6 +44,9 @@ class AnilistClient(IClient):
             f'''user_lists={ f'{nl}'.join([f'({key}, {str(len(self.__user_lists[key]))})' for key in self.__user_lists.keys()]) })'''
         )
 
+    def __str__(self):
+        return self.__repr__()
+
     @property
     def request_url(self) -> str:
         """Anilist API URL (`str`, read-only)."""
@@ -73,7 +76,10 @@ class AnilistClient(IClient):
         return [
             k[0]
             for k in self.__unique_scores
-            if k[0] in set([i[0] for j in self.__user_lists.keys() for i in self.__user_lists[j] if j in user_lists])
+            if k[0]
+            in set(
+                [i[0] for j in self.__user_lists.keys() for i in self.__user_lists[j] if j in user_lists],
+            )
         ]
 
     def scores(self, user_lists: list[str]) -> list[int]:
@@ -83,7 +89,10 @@ class AnilistClient(IClient):
             #               or make this method private and introduce wrapper to check for missing scores
             #               (i.e. `scores()` + `__scores()`).
             for k in self.__unique_scores
-            if k[0] in set([i[0] for j in self.__user_lists.keys() for i in self.__user_lists[j] if j in user_lists])
+            if k[0]
+            in set(
+                [i[0] for j in self.__user_lists.keys() for i in self.__user_lists[j] if j in user_lists],
+            )
         ]
 
     def get_user_id(self) -> Optional[str]:

@@ -53,6 +53,9 @@ class Recommender(IRecommender):
     titles : list[str], optional
         List of titles to calculate similarity for, by default None.
 
+    language : str, optional
+        Language of titles to calculate similarity for, by default 'english'.
+
     Attributes
     ----------
     __CHUNK_SIZE : np.uint16
@@ -110,6 +113,7 @@ class Recommender(IRecommender):
         scale_range: list[float] = None,
         is_titles: bool = False,
         titles: list[str] = None,
+        language: str = 'english',
     ):
         self.__client: IClient = client
         self.__storage: IStorage = storage
@@ -130,9 +134,7 @@ class Recommender(IRecommender):
                 dtype=np.uint32,
             )
             if not is_titles
-            else self.__storage.info[
-                self.__storage.info['english'].isin(self.__titles)
-            ].index.values  # TODO: replace english
+            else self.__storage.info[self.__storage.info[language].isin(self.__titles)].index.values
         )
 
         self.__indexes_exclude: np.ndarray = (
@@ -175,21 +177,21 @@ class Recommender(IRecommender):
         return ''.join(
             [
                 f'Recommender(\n ',
-                f'similarity_method={self.__similarity_method},\n',
-                f'columns={self.__columns},\n',
-                f'lists_include={self.__lists_include},\n',
-                f'lists_exclude={self.__lists_exclude},\n',
-                f'weighted={self.__weighted},\n',
-                f'scaled={self.__scaled},\n',
-                f'scale_range={self.__scale_range},\n',
-                f'INDEXES_INCLUDE_SHAPE={self.__indexes_include.shape},\n',
-                f'INDEXES_EXCLUDE_SHAPE={self.__indexes_exclude.shape},\n',
-                f'SCORES_SHAPE={self.__scores.shape},\n',
-                f'SUM={self.__sum},\n',
-                f'MATRIX_SHAPE={self.__matrix.shape},\n',
-                f'CHUNK_SIZE={self.__CHUNK_SIZE},\n',
-                f'client={self.__client},\n',
-                f'storage={self.__storage})',
+                f'  similarity_method={self.__similarity_method},\n',
+                f'  columns={self.__columns},\n',
+                f'  lists_include={self.__lists_include},\n',
+                f'  lists_exclude={self.__lists_exclude},\n',
+                f'  weighted={self.__weighted},\n',
+                f'  scaled={self.__scaled},\n',
+                f'  scale_range={self.__scale_range},\n',
+                f'  INDEXES_INCLUDE_SHAPE={self.__indexes_include.shape},\n',
+                f'  INDEXES_EXCLUDE_SHAPE={self.__indexes_exclude.shape},\n',
+                f'  SCORES_SHAPE={self.__scores.shape},\n',
+                f'  SUM={self.__sum},\n',
+                f'  MATRIX_SHAPE={self.__matrix.shape},\n',
+                f'  CHUNK_SIZE={self.__CHUNK_SIZE},\n',
+                f'  client={self.__client},\n',
+                f'  storage={self.__storage})',
             ],
         )
 
@@ -253,13 +255,19 @@ class Recommender(IRecommender):
 
         index_sorted = np.argsort(-result_vector)
         self.__result_indexes = index_sorted[
-            ~np.isin(index_sorted, np.union1d(self.__indexes_include, self.__indexes_exclude))
+            ~np.isin(
+                index_sorted,
+                np.union1d(self.__indexes_include, self.__indexes_exclude),
+            )
         ]
         self.__result_scores = minmax_scale(result_vector[self.__result_indexes])
 
         return np.hstack(
             [
-                self.__storage.info.iloc[self.__result_indexes].id.values.reshape(-1, 1),
+                self.__storage.info.iloc[self.__result_indexes].id.values.reshape(
+                    -1,
+                    1,
+                ),
                 self.__result_scores.reshape(-1, 1),
             ],
         )

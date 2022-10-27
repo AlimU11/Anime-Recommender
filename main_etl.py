@@ -3,13 +3,13 @@ import os
 
 import yaml
 
-from anime_recommender.etl import APIExtractor, APIProcessor, APITransformer
-
 # load config variables to environment variables
 with open('global_config.yaml', 'r') as f:
     config = yaml.safe_load(f)
     for key in config:
         os.environ[key] = str(config[key])
+
+from anime_recommender.etl import APIExtractor, APIProcessor, APITransformer
 
 
 def get_args():
@@ -69,4 +69,7 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    # main()
+
+    e = APITransformer()
+    e.transform_pipe()

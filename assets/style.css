@@ -23,7 +23,7 @@ h6 {
     display: none;
 }
 
-#scale-slider {
+#scale_slider {
     margin-top: 15px;
     padding-left: 0;
     padding-right: 0;
@@ -55,6 +55,7 @@ li { cursor: pointer; }
 
 .form-check.form-switch {
     cursor: auto;
+    padding-top: 0.2rem;
 }
 
 .content-card p {
@@ -120,7 +121,7 @@ body::-webkit-scrollbar-thumb
     padding-left: 15px;
 }
 
-#container-scaled, #container-weighted{
+#scaled_container, #weighted_container{
     padding-left: 0;
     margin-bottom: 1rem;
 }
@@ -130,11 +131,52 @@ body::-webkit-scrollbar-thumb
     display: inline-block;
 }
 
-#reset-graph, #apply-parameters-button {
+#reset_graph_button, #apply_button {
     float: right;
     margin: 1.5rem auto 0;
 }
 
 h5 {
     margin-top: 1rem;
+}
+
+.dropdown-menu.show {
+    padding-left: 0.75rem;
+}
+
+.Select.is-clearable.is-searchable.Select--multi {
+    height: 100%;
+}
+
+.Select.is-clearable.is-searchable.Select--multi > .Select-control {
+    height: 100%;
+    border-bottom-right-radius: 0;
+    border-top-right-radius: 0;
+}
+
+#titles_language_titles > button {
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+    height: 100%;
+}
+
+.dropdown-menu.show {
+    padding-left: 0rem;
+}
+
+::-webkit-scrollbar-track
+{
+	background-color: #FFFFFF;
+}
+
+::-webkit-scrollbar
+{
+	width: 7px;
+	background-color: #FFF;
+}
+
+::-webkit-scrollbar-thumb
+{
+    border-radius:20px;
+	background-color: #555;
 }

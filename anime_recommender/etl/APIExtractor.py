@@ -1,5 +1,7 @@
 import os
 import pickle
+import sys
+import time
 from datetime import datetime
 from typing import Final
 
@@ -17,6 +19,15 @@ class APIExtractor(IExtractor):
 
     Attributes
     ----------
+    __url : str
+        URL of the API.
+
+    __API_PERIOD : int
+        Period of time (in seconds) for which the `API_LIMIT` specified.
+
+    __API_LIMIT : int
+        Number of requests allowed within the `API_PERIOD` specified.
+
     __metadata_path : str
         Path to metadata file.
 
@@ -34,8 +45,9 @@ class APIExtractor(IExtractor):
         per page has not changed.
     """
 
-    __url: Final[str] = 'https://graphql.anilist.co'
-    __API_LIMIT: Final[int] = 60
+    __url: Final[str] = os.environ.get('API_URL')
+    __API_PERIOD: Final[int] = int(os.environ.get('API_PERIOD'))
+    __API_LIMIT: Final[int] = int(os.environ.get('API_LIMIT'))
 
     def __init__(self) -> None:
         self.__metadata_path: str = os.environ.get('METADATA_STAGED_PATH')
@@ -46,6 +58,7 @@ class APIExtractor(IExtractor):
         if os.path.exists(self.__metadata_path):
             with open(self.__metadata_path, 'rb') as f:
                 self.__metadata = pickle.load(f)
+                self.__metadata['per_page'] = self.__max_per_page
 
         else:
             self.__metadata = {
@@ -55,12 +68,29 @@ class APIExtractor(IExtractor):
             }
 
         logger.info('APIExtractor initialized.')
-        logger.info(f'''Data path: {self.__data_path}''')
-        logger.info(f'''Metadata path: {self.__metadata_path}''')
-        logger.info('Metadata:')
-        logger.info(f'''Last update: {self.__metadata['last_update']}''')
-        logger.info(f'''Pages: {self.__metadata['pages']}''')
-        logger.info(f'''Per page: {self.__metadata['per_page']}''')
+        logger.info('\n' + self.__repr__())
+
+    def __repr__(self):
+        nl = '\n'
+        return ''.join(
+            [
+                f'APIExtractor(\n',
+                f'    url="{self.__url}",\n',
+                f'    API_PERIOD={self.__API_PERIOD},\n',
+                f'    API_LIMIT={self.__API_LIMIT},\n',
+                f'    metadata_path="{self.__metadata_path}",\n',
+                f'    max_per_page="{self.__max_per_page}",\n',
+                f'    data_path="{self.__data_path}",\n',
+                f'    data={self.__data},\n',
+                f'''    metadata=({''.join([nl] + [
+                    f'        {key}={value},{nl}' for key, value in self.__metadata.items()
+                ])}    )\n''',
+                f')',
+            ],
+        )
+
+    def __str__(self):
+        return self.__repr__()
 
     def extract_pipe(self) -> None:
         logger.info('Processing data...')
@@ -79,9 +109,10 @@ class APIExtractor(IExtractor):
 
         logger.info('Done.')
 
+    # NOTE: Avoid rate limit https://anilist.gitbook.io/anilist-apiv2-docs/overview/rate-limiting
     @limits(
-        calls=90,
-        period=__API_LIMIT,  # NOTE: Avoid rate limit https://anilist.gitbook.io/anilist-apiv2-docs/overview/rate-limiting
+        calls=__API_LIMIT,
+        period=__API_PERIOD,
     )
     def __extract(self) -> None:
         """Extract data from AniList API."""
@@ -93,20 +124,9 @@ class APIExtractor(IExtractor):
         while has_next_page:
             logger.info(f'''Progress {page}/{self.__metadata['pages']} (estimated)''')
 
-            page_info, media = (
-                requests.post(
-                    self.__url,
-                    json={
-                        'query': query,
-                        'variables': {
-                            'page': page,
-                            'perPage': self.__metadata['per_page'],
-                        },
-                    },
-                )
-                .json()['data']['Page']
-                .values()
-            )
+            response = self.__get_response(page)
+
+            page_info, media = response.json()['data']['Page'].values()
 
             page += 1
             has_next_page = page_info['hasNextPage']
@@ -119,3 +139,48 @@ class APIExtractor(IExtractor):
         }
 
         logger.info('Done.')
+
+    def __get_response(self, page: int) -> requests.Response:
+        """Get response from API.
+
+        If status code is 429, wait for the specified time and try again.
+        If status code is not 200 or 429, exit.
+
+        Parameters
+        ----------
+        page : int
+            Page number.
+
+        Returns
+        -------
+        response : requests.Response
+            Response from API.
+        """
+        response = requests.post(
+            self.__url,
+            json={
+                'query': query,
+                'variables': {
+                    'page': page,
+                    'perPage': self.__metadata['per_page'],
+                },
+            },
+        )
+
+        if response.status_code != 200:
+            if response.status_code == 429:
+                retry_after = int(response.headers['Retry-After'])
+                logger.warning(f'Too many requests. Retry after {retry_after} seconds.')
+                for i in range(retry_after):
+                    logger.warning(f'Waiting {i+1} second(s)...')
+                    time.sleep(1)
+
+                return self.__get_response(page)
+
+            else:
+                logger.error(
+                    f'Server does not returned status code 200. Unexpected status code {response.status_code} returned. Exiting...',
+                )
+                sys.exit(1)
+
+        return response

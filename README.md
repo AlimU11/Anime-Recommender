@@ -4,9 +4,9 @@
 
 Parametrized anime recommendation system that produces recommendations based on
 1. individual title or set of titles
-![img.png](img.png)
+![img.png](assets/img.png)
 2. user profile (refer to Current limitations section for further details)
-![img_1.png](img_1.png)
+![img_1.png](assets/img_1.png)
 
 # Local Setup
 
@@ -33,6 +33,16 @@ to run only chosen parts of the ETL process.
 python main_local.py
 ```
 This will start the local server with the app.
+
+# File Structure
+
+1. `anime_recommender` module - contains all the code for the app
+
+2. `assets` - images used in README.md and NOTES.md. CSS and js for dash app
+
+3. `notebooks` - notebooks used for data exploration and model development
+
+4. `data` - folder with data used for the app. Not included in the repository due to its size. Could be easily recreated by running `main_etl.py
 
 # Roadmap
 Key features in further updates (unordered, full details are in the [project page](https://github.com/users/AlimU11/projects/1)):
