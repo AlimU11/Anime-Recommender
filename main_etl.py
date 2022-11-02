@@ -69,7 +69,4 @@ def main():
 
 
 if __name__ == '__main__':
-    # main()
-
-    e = APITransformer()
-    e.transform_pipe()
+    main()
