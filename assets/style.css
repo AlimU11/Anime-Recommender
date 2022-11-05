@@ -366,3 +366,11 @@ h5 {
     overflow: hidden;
     text-overflow: ellipsis;
 }
+
+.Select-menu-outer {
+    cursor: pointer !important;
+}
+
+.dropdown-menu.show > button:hover {
+    background-color: #e9ecef !important;
+}
