@@ -18,60 +18,140 @@ app = dash.Dash(
 app_data = AppData()
 app_data.storage = LocalStorage()
 
+RESULT_AMOUNT = int(os.environ.get('RESULT_AMOUNT'))
+
 INCLUDED_LISTS = ['Completed']
 EXCLUDED_LISTS = ['Dropped', 'Watching', 'Rewatching', 'Planning', 'Paused']
 
-ITEMS_ENG = app_data.storage.info.english.tolist()
+app_data.storage.info.sort_values(by='popularity', ascending=False, inplace=True)
 
-# NOTE: too consumptive without dynamic dropdown
-# ITEMS_ROMAJI = app_data.storage.info.romaji.tolist()
-# ITEMS_NATIVE = app_data.storage.info.native.tolist()
+ITEMS_ENG = [
+    {
+        'label': html.Div(
+            [
+                html.Div(
+                    style={
+                        'background-color': color,
+                        'background-image': f'url({img_small})',
+                    },
+                    className='dropdown-image',
+                ),
+                html.Div(
+                    [
+                        html.Span(english, className='dropdown-title'),
+                        html.Div(
+                            [startDate_year, ' ', format],
+                            className='dropdown-info',
+                        ),
+                    ],
+                    className='dropdown-text-container',
+                ),
+            ],
+            className='dropdown-item',
+        ),
+        'value': id,
+        'search': english.lower(),
+    }
+    for english, id, img_small, color, startDate_year, format in zip(
+        app_data.storage.info.english.values,
+        app_data.storage.info.id.values,
+        app_data.storage.info.img_small.values,
+        app_data.storage.info.color.values,
+        app_data.storage.info.startDate_year.values,
+        app_data.storage.info.format.values,
+    )
+]
 
-# ITEMS_ENG = [
-#                 {'label': english, 'value': id, 'search': romaji}
-#                 for english, romaji, id
-#                 in zip(
-#                     app_data.storage.info.english.values,
-#                     app_data.storage.info.romaji.values,
-#                     app_data.storage.info.id.values,
-#                 )
-#             ]
-#
-# ITEMS_ROMAJI = [
-#                     {'label': romaji, 'value': id, 'search': romaji}
-#                     for romaji, id
-#                     in zip(
-#                         app_data.storage.info.romaji.values,
-#                         app_data.storage.info.id.values,
-#                     )
-#                 ]
-#
-# ITEMS_NATIVE = [
-#                     {'label': native, 'value': id, 'search': romaji}
-#                     for native, romaji, id
-#                     in zip(
-#                         app_data.storage.info.native.values,
-#                         app_data.storage.info.romaji.values,
-#                         app_data.storage.info.id.values,
-#                     )
-#                 ]
+ITEMS_ROMAJI = [
+    {
+        'label': html.Div(
+            [
+                html.Div(
+                    style={
+                        'background-color': color,
+                        'background-image': f'url({img_small})',
+                    },
+                    className='dropdown-image',
+                ),
+                html.Div(
+                    [
+                        html.Span(romaji, className='dropdown-title'),
+                        html.Div(
+                            [startDate_year, ' ', format],
+                            className='dropdown-info',
+                        ),
+                    ],
+                    className='dropdown-text-container',
+                ),
+            ],
+            className='dropdown-item',
+        ),
+        'value': id,
+        'search': romaji.lower(),
+    }
+    for romaji, id, img_small, color, startDate_year, format in zip(
+        app_data.storage.info.romaji.values,
+        app_data.storage.info.id.values,
+        app_data.storage.info.img_small.values,
+        app_data.storage.info.color.values,
+        app_data.storage.info.startDate_year.values,
+        app_data.storage.info.format.values,
+    )
+]
+
+ITEMS_NATIVE = [
+    {
+        'label': html.Div(
+            [
+                html.Div(
+                    style={
+                        'background-color': color,
+                        'background-image': f'url({img_small})',
+                    },
+                    className='dropdown-image',
+                ),
+                html.Div(
+                    [
+                        html.Span(native, className='dropdown-title'),
+                        html.Div(
+                            [startDate_year, ' ', format],
+                            className='dropdown-info',
+                        ),
+                    ],
+                    className='dropdown-text-container',
+                ),
+            ],
+            className='dropdown-item',
+        ),
+        'value': id,
+        'search': native.lower(),
+    }
+    for native, id, img_small, color, startDate_year, format in zip(
+        app_data.storage.info.native.values,
+        app_data.storage.info.id.values,
+        app_data.storage.info.img_small.values,
+        app_data.storage.info.color.values,
+        app_data.storage.info.startDate_year.values,
+        app_data.storage.info.format.values,
+    )
+]
+
+app_data.storage.info.sort_values(by='id', ascending=True, inplace=True)
 
 language_options_username = [
     dbc.DropdownMenuItem('english', id=IdHolder.english_username.name),
-    # dbc.DropdownMenuItem('romaji', id=IdHolder.romaji_username.name),
-    # dbc.DropdownMenuItem('native', id=IdHolder.native_username.name),
+    dbc.DropdownMenuItem('romaji', id=IdHolder.romaji_username.name),
+    dbc.DropdownMenuItem('native', id=IdHolder.native_username.name),
 ]
 
 language_options_titles = [
     dbc.DropdownMenuItem('english', id=IdHolder.english.name),
-    # dbc.DropdownMenuItem('romaji', id=IdHolder.romaji.name),
-    # dbc.DropdownMenuItem('native', id=IdHolder.native.name),
+    dbc.DropdownMenuItem('romaji', id=IdHolder.romaji.name),
+    dbc.DropdownMenuItem('native', id=IdHolder.native.name),
 ]
 
 source_options = [
     dbc.DropdownMenuItem('Anilist', id=IdHolder.Anilist.name),
-    # dbc.DropdownMenuItem('romaji', id=IdHolder.romaji.name),
-    # dbc.DropdownMenuItem('native', id=IdHolder.native.name),
 ]
 
 ########################################################################################################################
@@ -114,123 +194,80 @@ alert = lambda text: dbc.Alert(
     style={'height': 'fit-content', 'margin-top': '0rem'},
 )
 
-card = lambda s: dbc.Card(
-    [
-        dbc.CardBody(
-            [
-                html.Div(
+
+def card(s):
+    title_len = 24 if app_data.language != 'native' else 18
+
+    return dbc.Card(
+        [
+            dbc.CardBody(
+                [
                     html.Div(
-                        f'{s.proba:.0%}',
-                        style={
-                            'position': 'absolute',
-                            'top': '50%',
-                            'left': '50%',
-                            'transform': 'translate(-50%, -50%)',
-                            'color': f'''{'white' if s.color else 'black'}''',
-                        },
-                    ),
-                    style={
-                        'text-align': 'right',
-                        'background-color': f'''{s.color if s.color else 'white'}''',
-                        'border-radius': '50%',
-                        'width': '40px',
-                        'height': '40px',
-                        'color': 'white',
-                        'font-size': '0.85rem',
-                        'font-weight': 'bold',
-                        'display': 'block',
-                        'position': 'relative',
-                        'margin-left': 'auto',
-                        'margin-right': '15px',
-                        'margin-top': '15px',
-                        'box-shadow': '0 0 10px 0 rgba(0, 0, 0, 0.8)',
-                    },
-                ),
-                html.Div(
-                    [
-                        html.H6(
-                            html.A(
-                                f'''{s[app_data.language][:24]}{'...' if len(s[app_data.language]) > 24 else ''}''',
-                                href=f'''https://anilist.co/anime/{s['id']}''',
-                                target='_blank',
-                                style={
-                                    'color': f'''{s.color if s.color else 'black'}''',
-                                    'text-decoration': 'none',
-                                    'z-index': '999',
-                                    'position': 'relative',
-                                },
-                                id=f'''tooltip-title-{s['id']}''',
-                                className='card-title',
-                            ),
-                        ),
-                        html.P(
-                            f'{s.description}',
-                            className='card-text',
+                        html.Div(
+                            f'{s.proba:.0%}',
                             style={
-                                'height': '115px',
-                                'overflow-y': 'auto',
-                                'width': '100%',
-                                'word-wrap': 'break-word',
-                                'z-index': '999',
-                                'position': 'relative',
+                                'color': f'''{'white' if s.color else 'black'}''',
                             },
+                            className='probability-score',
                         ),
-                        # dbc.Button(
-                        #    f'''Explore''',
-                        #    color="primary",
-                        #    href=f'''https://anilist.co/anime/{s['id']}''',
-                        #    target='_blank'
-                        # ),
-                    ],
-                    style={
-                        'margin': '0px',
-                        'padding': '10px',
-                        'width': '100%',
-                        'height': '50%',
-                        'background-color': 'white',
-                        'overflow': 'hidden',
-                        'text-overflow': 'ellipsis',
-                    },
-                    className='mt-auto',
-                ),
-                tooltip(s[app_data.language], f'''tooltip-title-{s['id']}''', 'top')
-                if len(s[app_data.language]) > 24
-                else '',
-                html.A(
-                    className='stretched-link',
-                    href=f'''https://anilist.co/anime/{s['id']}''',
-                    target='_blank',
-                ),
-            ],
-            style={
-                'padding': '0px',
-                'background-image': f'url({s.large})',  # TODO: rename
-                'background-repeat': 'no-repeat',
-                'background-position': 'bottom',
-                'background-size': '100% auto',
-                'object-fit': 'cover',
-                'overflow': 'hidden',
-                'text-overflow': 'ellipsis',
-                'border-radius': '12px',
-                'padding': '0px',
-                'box-shadow': '0 6px 10px rgba(0,0,0,.08), 0 0 6px rgba(0,0,0,.05)',
-                'transition': '.3s transform cubic-bezier(.155,1.105,.295,1.12),.3s box-shadow,.3s '
-                '-webkit-transform cubic-bezier(.155,1.105,.295,1.12)',
-            },
-            className='flex-column d-flex content-card',
-        ),
-    ],
-    style={
-        'width': '16rem',
-        'height': '20rem',
-        'margin-bottom': '3rem',
-        'border-radius': '12px',
-        'padding': '0px',
-        'box-shadow': '0 6px 10px rgba(0,0,0,.08), 0 0 6px rgba(0,0,0,.05)',
-        'transition': '.3s transform cubic-bezier(.155,1.105,.295,1.12),.3s box-shadow,.3s '
-        '-webkit-transform cubic-bezier(.155,1.105,.295,1.12)',
-    },
-)
+                        style={
+                            'background-color': f'''{s.color if s.color else 'white'}''',
+                        },
+                        className='probability-container',
+                    ),
+                    html.Div(
+                        [
+                            html.Div(
+                                style={
+                                    'background-color': f'{s.color if s.color else "white"}',
+                                    'background-image': f'url({s.img_small})',
+                                },
+                                className='card-image-small',
+                            ),
+                            html.Div(
+                                style={
+                                    'background-image': f'url({s.img_large})',
+                                },
+                                className='card-image-large',
+                            ),
+                        ],
+                        className='card-image-container',
+                    ),
+                    html.Div(
+                        [
+                            html.H6(
+                                html.A(
+                                    f'''{s[app_data.language][:title_len]}{'...' if len(s[app_data.language]) > title_len else ''}''',
+                                    href=f'''https://anilist.co/anime/{s['id']}''',
+                                    target='_blank',
+                                    style={
+                                        'color': f'''{s.color if s.color else 'black'}''',
+                                    },
+                                    id=f'''tooltip-title-{s['id']}''',
+                                    className='card-title',
+                                ),
+                            ),
+                            html.P(
+                                f'{s.description}',
+                                className='card-description',
+                            ),
+                        ],
+                        className='mt-auto card-text-container',
+                    ),
+                    tooltip(s[app_data.language], f'''tooltip-title-{s['id']}''', 'top')
+                    if len(s[app_data.language]) > title_len
+                    else '',
+                    html.A(
+                        className='stretched-link',
+                        href=f'''https://anilist.co/anime/{s['id']}''',
+                        target='_blank',
+                    ),
+                ],
+                className='flex-column d-flex content-card',
+            ),
+        ],
+    )
+
 
 modal_body = lambda header, text: [
     dbc.ModalHeader(dbc.ModalTitle(header)),
@@ -323,7 +360,7 @@ search_input = dbc.Col(
                     language_options_username,
                     label='english',
                     id=IdHolder.titles_language_username.name,
-                ),  # TODO: add more languages
+                ),
             ],
             style={'height': '100%', 'margin': '0px'},
         ),
@@ -338,12 +375,13 @@ search_input1 = dbc.Col(
         dbc.ListGroup(
             [
                 dcc.Dropdown(
-                    ITEMS_ENG,
-                    # app_data.storage.info.english.unique().tolist(),
+                    ITEMS_ENG[:RESULT_AMOUNT],
                     placeholder='Type to search',
                     multi=True,
                     id=IdHolder.item_searchbar.name,
                     style={'width': '100%'},
+                    maxHeight=400,
+                    optionHeight=65,
                 ),
                 dbc.DropdownMenu(
                     language_options_titles,

@@ -12,4 +12,4 @@ with open('global_config.yaml', 'r') as f:
 from anime_recommender.ui import app  # noqa
 
 if __name__ == '__main__':
-    app.run_server(debug=True)
+    app.run_server(debug=True, use_reloader=True, port=8050)

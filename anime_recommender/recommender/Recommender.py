@@ -134,7 +134,7 @@ class Recommender(IRecommender):
                 dtype=np.uint32,
             )
             if not is_titles
-            else self.__storage.info[self.__storage.info[language].isin(self.__titles)].index.values
+            else self.__storage.info[self.__storage.info.id.isin(self.__titles)].index.values
         )
 
         self.__indexes_exclude: np.ndarray = (

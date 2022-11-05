@@ -115,9 +115,18 @@ class APITransformer(DataFrame, ITransformer):
         """Stage the transformed data, metadata and info to files."""
         logger.info('Staging data...')
 
-        self.__info = self[['id', 'description', 'romaji', 'english', 'native', 'large', 'color']]
+        self.__info = pd.concat(
+            [
+                self.__info,
+                self[['id', 'description', 'romaji', 'english', 'native', 'extraLarge', 'medium', 'color']],
+            ],
+            axis=1,
+        )
+
+        self.__info.rename({'extraLarge': 'img_large', 'medium': 'img_small'}, axis=1, inplace=True)
+
         self.drop(
-            ['description', 'romaji', 'english', 'native', 'large', 'color'],
+            ['description', 'romaji', 'english', 'native', 'extraLarge', 'color'],
             axis=1,
             inplace=True,
         )
@@ -155,6 +164,8 @@ class APITransformer(DataFrame, ITransformer):
 
     def transform_categorical(self) -> DataFrame:
         logger.info('Transforming categorical columns...')
+
+        self.__info = self['format'].to_frame().copy()
 
         self['episodes'] = pd.cut(
             self['episodes'],
@@ -200,7 +211,20 @@ class APITransformer(DataFrame, ITransformer):
         """
         logger.info('Scaling numerical columns...')
 
+        # preserve original popularity state for further sort info dataframe by popularity
+        # in order to effectively search by titles and get top n results by popularity
+        # refer to `update_items_dropdown` callback in `ui.callbacks`
+        self.__info = pd.concat(
+            [
+                self.__info,
+                self['popularity'].to_frame().copy(),
+            ],
+            axis=1,
+        )
+
         mm = MinMaxScaler()
+
+        # TODO: transform outliers before scaling. This should reduce the impact of outliers on the final result.
         self.loc[:, 'duration':'favourites'] = mm.fit_transform(
             self.loc[:, 'duration':'favourites'],
         )
@@ -215,6 +239,14 @@ class APITransformer(DataFrame, ITransformer):
     def drop_transformed(self) -> DataFrame:
         """Drops all columns that not used for recommendations."""
         logger.info('Dropping transformed columns...')
+
+        self.__info = pd.concat(
+            [
+                self.__info,
+                self['startDate_year'].to_frame().copy(),
+            ],
+            axis=1,
+        )
 
         self.drop(
             [

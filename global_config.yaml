@@ -44,3 +44,6 @@ API_PERIOD: 60
 
 # API_LIMIT - specifies the maximum number of requests per period
 API_LIMIT: 90
+
+# RESULT_AMOUNT - specifies the number of results in items dropdown search to be returned
+RESULT_AMOUNT: 8

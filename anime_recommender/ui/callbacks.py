@@ -7,8 +7,11 @@ from dash.exceptions import PreventUpdate
 from sklearn.preprocessing import MinMaxScaler, minmax_scale
 
 from . import IdHolder
-from .layout import (  # , ITEMS_NATIVE, ITEMS_ROMAJI
+from .layout import (
     ITEMS_ENG,
+    ITEMS_NATIVE,
+    ITEMS_ROMAJI,
+    RESULT_AMOUNT,
     alert_features,
     app,
     app_data,
@@ -243,16 +246,16 @@ def update_info_toast(n, is_open):
         Input(i, 'n_clicks')
         for i in [
             IdHolder.english.name,
-            # IdHolder.romaji.name,
-            # IdHolder.native.name,
+            IdHolder.romaji.name,
+            IdHolder.native.name,
         ]
     ]
     + [
         Input(i, 'n_clicks')
         for i in [
             IdHolder.english_username.name,
-            # IdHolder.romaji_username.name,
-            # IdHolder.native_username.name,
+            IdHolder.romaji_username.name,
+            IdHolder.native_username.name,
         ]
     ],
     prevent_initial_call=True,
@@ -268,23 +271,46 @@ def mutual_update_dropdown_language(*args):
 
 
 @app.callback(
-    [
-        Output(IdHolder.item_searchbar.name, 'options'),
-    ],
+    Output(IdHolder.item_searchbar.name, 'options'),
     [
         Input(IdHolder.titles_language_titles.name, 'label'),
+        Input(IdHolder.item_searchbar.name, 'search_value'),
+        Input(IdHolder.item_searchbar.name, 'value'),
     ],
     prevent_initial_call=True,
 )
-def update_items_dropdown(language):
+def update_items_dropdown(language, search_value, chosen_values):
+
     if language == 'english':
         items = ITEMS_ENG
-    # elif language == 'romaji':
-    #     items = ITEMS_ROMAJI
-    # elif language == 'native':
-    #     items = ITEMS_NATIVE
+    elif language == 'romaji':
+        items = ITEMS_ROMAJI
+    elif language == 'native':
+        items = ITEMS_NATIVE
 
-    return [items]
+    chosen_items = [i for i in items if i['value'] in chosen_values] if chosen_values else []
+    items_return = []
+
+    if not search_value:
+        if ctx.triggered_id == 'titles_language_titles' or ctx.triggered[0]['prop_id'] == 'item_searchbar.value':
+            for i in items:
+                if i['value'] not in (chosen_values or []):
+                    items_return.append(i)
+                if len(items_return) >= RESULT_AMOUNT:
+                    return items_return + chosen_items
+
+        raise PreventUpdate
+
+    for i in items:
+        if (
+            search_value.lower() in i['label'].children[1].children[0].children.lower()
+            or search_value.lower() in i['search']
+        ) and i['value'] not in (chosen_values or []):
+            items_return.append(i)
+        if len(items_return) >= RESULT_AMOUNT:
+            return items_return + chosen_items
+
+    return items_return + chosen_items
 
 
 @app.callback(

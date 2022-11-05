@@ -57,7 +57,8 @@ query ($page: Int, $perPage: Int) {
             genres,
 
             coverImage {
-              large,
+              extraLarge,
+              medium,
               color
             }
 
