@@ -1,6 +1,6 @@
 # Anime Recommender
 
-> Web App: [https://alimu.pythonanywhere.com](https://alimu.pythonanywhere.com) (not currently mobile optimized)
+> Web App: [https://anime-recommender-AlimU.pythonanywhere.com](https://anime-recommender-AlimU.pythonanywhere.com) (not currently mobile optimized)
 
 Parametrized anime recommendation system that produces recommendations based on
 1. individual title or set of titles
