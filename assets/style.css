@@ -460,6 +460,10 @@ h5 {
     font-size: 1.5rem;
 }
 
+.settings-column {
+    display: block !important;
+}
+
 @media screen and (max-width: 1600px) {
 
     .card-body>.row>.col-2 {
@@ -489,8 +493,6 @@ h5 {
     .settings-card>.card-body {
         padding: 5vw 5vw 5vh 10vw;
     }
-
-    .settings-card>.card-body>.row {}
 
     .settings-card>.card-body>.row>h2>div> :first-child {
         display: none;
