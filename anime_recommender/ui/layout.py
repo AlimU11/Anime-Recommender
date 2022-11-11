@@ -283,6 +283,7 @@ modal_body = lambda header, text: [
 ]
 
 user_lists = lambda lists: [
+    html.P('User Lists', className='title-mobile'),
     html.I(
         [
             'User lists to include or exclude from recommendations. Entries from ',
@@ -327,18 +328,14 @@ alert_features = dbc.Alert(
 #                                                  Main layout                                                         #
 ########################################################################################################################
 
-search_type_switch = dbc.Col(
+search_type_switch = html.Div(
     [
         dbc.Switch(
             id=IdHolder.search_type_switch.name,
             label='By username',
             value=False,
         ),
-        # html.Div("By username")
     ],
-    align='top',
-    width=2,
-    style={'width': '170px'},
 )
 
 search_input = dbc.Col(
@@ -365,7 +362,7 @@ search_input = dbc.Col(
             style={'height': '100%', 'margin': '0px'},
         ),
     ],
-    style={'background-f': 'white', 'margin-left': '2rem'},
+    style={'background-f': 'white'},  # 'margin-left': '2rem'},
     id=IdHolder.username_searchbar_container.name,
     align='center',
 )
@@ -379,9 +376,10 @@ search_input1 = dbc.Col(
                     placeholder='Type to search',
                     multi=True,
                     id=IdHolder.item_searchbar.name,
-                    style={'width': '100%'},
                     maxHeight=400,
                     optionHeight=65,
+                    persistence=True,
+                    persistence_type='local',
                 ),
                 dbc.DropdownMenu(
                     language_options_titles,
@@ -396,30 +394,46 @@ search_input1 = dbc.Col(
     id=IdHolder.item_searchbar_container.name,
 )
 
-generate_button = dbc.Col(
+generate_button = html.Div(
     dbc.Button(
         'Generate',
         color='primary',
         id=IdHolder.generate_button.name,
     ),
-    width=2,
     style={'background-color': 'white'},
 )
 
-searchbar = dbc.Row(
+header = html.Div(
     [
-        dbc.Col(
-            dbc.Row(
-                [
-                    search_type_switch,
-                    search_input,
-                    search_input1,
-                ],
-            ),
+        html.H2('Anime Recommender'),
+        dbc.Button(
+            [
+                html.Span('Parameters'),
+                html.I(
+                    className='bi bi-arrow-right',
+                    style={'font-weight': 'bold', 'margin-left': '0.5rem'},
+                ),
+            ],
+        ),
+    ],
+    className='header-container',
+)
+
+searchbar = html.Div(
+    [
+        search_type_switch,
+        html.Div(
+            [
+                search_input,
+                search_input1,
+            ],
+            className='searchbar-container',
+            # style={'width': '100%'},
         ),
         generate_button,
     ],
     style={'background-color': 'white', 'min-height': '100px'},
+    className='search-container',
 )
 
 output_container = dbc.Row(
@@ -439,7 +453,7 @@ main = dbc.Col(
         dbc.Card(
             dbc.CardBody(
                 [
-                    html.H2('Anime Recommender', style={'margin-bottom': '2rem'}),
+                    header,
                     searchbar,
                     output_container,
                 ],
@@ -453,6 +467,7 @@ main = dbc.Col(
     ],
     width=8,
     style={'background-color': 'white', 'height': '100%'},
+    class_name='main-column',
 )
 
 ########################################################################################################################
@@ -463,23 +478,20 @@ header = dbc.Row(
     [
         html.H2(
             [
-                dbc.Row(
+                html.Div(
                     [
-                        dbc.Col(
+                        html.Div(
                             [
                                 'Parameters',
                             ],
-                            align='left',
                         ),
-                        dbc.Col(
+                        html.Div(
                             [
                                 html.I(
                                     className='bi bi-sliders2',
                                     style={'font-weight': 'bold'},
                                 ),
                             ],
-                            align='right',
-                            width=2,
                         ),
                     ],
                 ),
@@ -490,6 +502,7 @@ header = dbc.Row(
 
 recommender_type = dbc.AccordionItem(
     [
+        html.P('Recommendation Engine', className='title-mobile'),
         html.P(
             html.I(
                 'Recommendation engine stands for the algorithm used to generate recommendations. Standard (linear kernel) is the default engine and works good for most cases. Experimental (rbf kernel) is awful for large number of titles, but can give some interesting results for individual one(s).',
@@ -544,6 +557,7 @@ scaled_options = [
 
 included_features = dbc.AccordionItem(
     [
+        html.P('Included Features', className='title-mobile'),
         html.P(
             html.I(
                 'Each title has individual features that make it unique and distinguish from others. Those features could be included in calculation and potentially affect recommendation results. The further information about each feature is presented below.',
@@ -717,6 +731,7 @@ parameters = dbc.Row(
         apply_button,
     ],
     style={'background-color': 'white', 'width': '100%', 'margin-top': '1.5rem'},
+    class_name='settings-accordion',
 )
 
 settings = dbc.Col(
@@ -729,96 +744,109 @@ settings = dbc.Col(
                 ],
             ),
             style={'background-color': 'white', 'height': '100%'},
+            class_name='settings-card',
         ),
     ],
     style={'background-color': 'white', 'height': '100%'},
     width=4,
+    class_name='settings-column',
 )
 
 ########################################################################################################################
 ########################################################################################################################
 ########################################################################################################################
 
-app.layout = dbc.Card(
-    dbc.CardBody(
-        [
-            dbc.Row(
-                [
-                    main,
-                    settings,
-                    dbc.Button(
-                        html.I(
-                            className='bi bi-info-lg',
-                            style={'font-weight': 'bold'},
-                        ),
-                        id=IdHolder.info_button.name,
-                        color='primary',
-                        n_clicks=0,
-                        style={
-                            'position': 'fixed',
-                            'bottom': '25px',
-                            'left': '25px',
-                            'border-radius': '50%',
-                            'width': '3rem',
-                            'height': '3rem',
-                            'z-index': '1000',
-                        },
-                    ),
-                    dbc.Toast(
-                        html.P(
-                            [
-                                html.B('Anilist: '),
-                                html.A(
-                                    'AlimU',
-                                    href='https://anilist.co/user/AlimU/',
-                                    target='_blank',
-                                ),
-                                html.Br(),
-                                html.B('GitHub: '),
-                                html.A(
-                                    'Anime-Recommender',
-                                    href='https://github.com/AlimU11/Anime-Recommender',
-                                    target='_blank',
-                                ),
-                                html.Br(),
-                                html.I(
-                                    'you can give me a star on GitHub if you like a project or open an issue if you found a bug or have any suggestions',
-                                    style={'font-size': '0.8rem'},
-                                ),
-                            ],
-                            style={'margin-bottom': '0'},
-                        ),
-                        id=IdHolder.info_container.name,
-                        header='Contacts',
-                        is_open=False,
-                        dismissable=True,
-                        # icon="info",
-                        style={
-                            'position': 'fixed',
-                            'bottom': '5rem',
-                            'left': '5rem',
-                            'width': 350,
-                            'z-index': '1003',
-                            'background-color': 'rgba(255,255,255)',
-                        },
-                    ),
-                ],
-                style={'height': '100%'},
-                align='center',
-            ),
-            dbc.Modal(
-                [
-                    modal_body('', ''),
-                ],
-                id=IdHolder.modal_notification.name,
-                is_open=False,
-            ),
-        ],
+info_button = [
+    dbc.Button(
+        html.I(
+            className='bi bi-info-lg',
+            style={'font-weight': 'bold'},
+        ),
+        id=IdHolder.info_button.name,
+        color='primary',
+        n_clicks=0,
+        style={
+            'position': 'fixed',
+            'bottom': '25px',
+            'left': '25px',
+            'border-radius': '50%',
+            'width': '3rem',
+            'height': '3rem',
+            'z-index': '1000',
+        },
     ),
-    style={
-        'height': '100vh',
-        'margin-left': '5vw',
-        'margin-right': '0',
-        'border': 'none',
-    },
+    dbc.Toast(
+        html.P(
+            [
+                html.B('Anilist: '),
+                html.A(
+                    'AlimU',
+                    href='https://anilist.co/user/AlimU/',
+                    target='_blank',
+                ),
+                html.Br(),
+                html.B('GitHub: '),
+                html.A(
+                    'Anime-Recommender',
+                    href='https://github.com/AlimU11/Anime-Recommender',
+                    target='_blank',
+                ),
+                html.Br(),
+                html.I(
+                    'you can give me a star on GitHub if you like a project or open an issue if you found a bug or have any suggestions',
+                    style={'font-size': '0.8rem'},
+                ),
+            ],
+            style={'margin-bottom': '0'},
+        ),
+        id=IdHolder.info_container.name,
+        header='Contacts',
+        is_open=False,
+        dismissable=True,
+        # icon="info",
+        style={
+            'position': 'fixed',
+            'bottom': '5rem',
+            'left': '5rem',
+            'width': 350,
+            'z-index': '1003',
+            'background-color': 'rgba(255,255,255)',
+        },
+    ),
+]
+
+app.layout = html.Div(
+    [
+        dbc.Card(
+            dbc.CardBody(
+                [
+                    dbc.Row(
+                        [
+                            main,
+                            settings,
+                        ],
+                        style={'height': '100%'},
+                        align='center',
+                    ),
+                    dbc.Modal(
+                        [
+                            modal_body('', ''),
+                        ],
+                        id=IdHolder.modal_notification.name,
+                        is_open=False,
+                    ),
+                    html.Span(className='hidden', id=IdHolder.hidden.name),
+                ],
+                class_name='main-card-body',
+            ),
+            style={
+                'height': '100vh',
+                'margin-left': '5vw',
+                'margin-right': '0',
+                'border': 'none',
+            },
+            class_name='main-card',
+        ),
+        *info_button,
+    ],
 )

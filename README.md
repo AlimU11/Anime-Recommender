@@ -47,11 +47,13 @@ This will start the local server with the app.
 # Roadmap
 Key features in further updates (unordered, full details are in the [project page](https://github.com/users/AlimU11/projects/1)):
 1. Add new recommendation engines
-2. Improve UI - add dark theme, make responsive layout for mobile devices
-3. <strike>Create weekly or monthly etl process to update data mart</strike> **Done** ✔️
-4. Resolve current limitations (refer to `Current limitations` section for further details)
-5. Add support for user profiles from other sites (MyAnimeList, Kitsu, etc.)
-6. Create etl and data mart for manga
+2. Improve UI - add dark theme
+3. <strike>Make responsive layout for mobile devices</strike> **Done** ✔️
+![](assets/img_3.png)
+4. <strike>Create weekly or monthly etl process to update data mart</strike> **Done** ✔️
+5. Resolve current limitations (refer to `Current limitations` section for further details)
+6. Add support for user profiles from other sites (MyAnimeList, Kitsu, etc.)
+7. Create etl and data mart for manga
 
 # Current limitations
 1. User's lists - all titles in INCLUDED user's lists MUST HAVE scores

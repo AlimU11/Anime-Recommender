@@ -69,3 +69,5 @@ class IdHolder(Enum):
     # info toast
     info_container = auto()
     info_button = auto()
+
+    hidden = auto()

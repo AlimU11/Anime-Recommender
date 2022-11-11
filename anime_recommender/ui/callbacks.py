@@ -3,6 +3,7 @@ import dash_bootstrap_components as dbc
 import numpy as np
 import plotly.graph_objects as go
 from dash import Dash, Input, Output, State, ctx, dcc, html
+from dash.dependencies import ClientsideFunction
 from dash.exceptions import PreventUpdate
 from sklearn.preprocessing import MinMaxScaler, minmax_scale
 
@@ -18,6 +19,15 @@ from .layout import (
     feature_options,
 )
 from .utils import dispatcher
+
+app.clientside_callback(
+    ClientsideFunction(
+        namespace='clientside',
+        function_name='resizeOnPageLoad',
+    ),
+    Output(IdHolder.hidden.name, 'children'),
+    Input(IdHolder.hidden.name, 'children'),
+)
 
 
 @app.callback(
@@ -207,6 +217,7 @@ def update_scaled_graph(value, btn):
             orientation='h',
         ),
         margin=dict(l=0, r=0, t=20, b=0),
+        dragmode=False,
     )
 
     fig.update_xaxes(title='', ticklabelposition='inside')
