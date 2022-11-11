@@ -506,6 +506,10 @@ h5 {
         border: none;
     }
 
+    .settings-column {
+        display: none;
+    }
+
     #weighted_container,
     #scaled_container,
     #graph_container {

@@ -57,6 +57,12 @@ function toRight(button) {
     button.replaceChild(text, button.firstChild);
 
     document.documentElement.style.setProperty('--rotation', '-180deg');
+
+    main_column = document.getElementsByClassName('main-column')[0];
+    settings_column = document.getElementsByClassName('settings-column')[0];
+
+    main_column.style.display = 'hidden';
+    settings_column.style.display = 'block';
 }
 
 function toLeft(button) {
@@ -70,6 +76,12 @@ function toLeft(button) {
     button.replaceChild(text, button.firstChild);
 
     document.documentElement.style.setProperty('--rotation', '0deg');
+
+    main_column = document.getElementsByClassName('main-column')[0];
+    settings_column = document.getElementsByClassName('settings-column')[0];
+
+    main_column.style.display = 'block';
+    settings_column.style.display = 'none';
 }
 
 var functions = [toRight, toLeft];
