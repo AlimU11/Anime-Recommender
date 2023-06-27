@@ -291,7 +291,6 @@ def mutual_update_dropdown_language(*args):
     prevent_initial_call=True,
 )
 def update_items_dropdown(language, search_value, chosen_values):
-
     if language == 'english':
         items = ITEMS_ENG
     elif language == 'romaji':
