@@ -62,8 +62,8 @@ def update_app_data() -> None:
     app_data.is_scaled = True if cm.is_weighted.value and cm.is_scaled.value else False
     app_data.scale_slider = cm.scale_slider.value if cm.is_weighted.value and cm.is_scaled.value else None
     # NOTE: possible overlap with initialization in get_recommendations()
-    app_data.included_lists = cm.included_lists.value
-    app_data.excluded_lists = cm.excluded_lists.value
+    app_data.included_lists = cm.included_list.value
+    app_data.excluded_lists = cm.excluded_list.value
     app_data.user_lists_style = cm.user_lists.style
     app_data.user_lists = cm.user_lists.children
     app_data.language = cm.titles_language.label
