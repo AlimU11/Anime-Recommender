@@ -74,7 +74,6 @@ class Parser:
         data = {}
 
         for link in tqdm.tqdm(links):
-
             # load and check page
             page = BASE + link
             driver.get(page)
