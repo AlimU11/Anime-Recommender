@@ -1,5 +1,5 @@
 import os
-from typing import final
+from typing import Optional, final
 
 import numpy as np
 import pandas as pd
@@ -110,10 +110,9 @@ class Recommender(IRecommender):
         lists_exclude: list[str],
         weighted: bool = False,
         scaled: bool = False,
-        scale_range: list[float] = None,
+        scale_range: list[float] = [1, 10],
         is_titles: bool = False,
-        titles: list[str] = None,
-        language: str = 'english',
+        titles: Optional[list[str]] = None,
     ):
         self.__client: IClient = client
         self.__storage: IStorage = storage
@@ -125,7 +124,7 @@ class Recommender(IRecommender):
         self.__scaled: bool = scaled
         self.__scale_range: np.float16 = np.float16(scale_range)
         self.__is_titles: bool = is_titles
-        self.__titles: list[str] = titles
+        self.__titles: Optional[list[str]] = titles
         self.__CHUNK_SIZE: np.uint16 = np.uint16(os.environ['CHUNK_SIZE'])
 
         self.__indexes_include: np.ndarray = (
@@ -133,7 +132,7 @@ class Recommender(IRecommender):
                 self.__storage.map(self.__client.indexes(self.__lists_include)),
                 dtype=np.uint32,
             )
-            if not is_titles
+            if not self.__is_titles
             else self.__storage.info[self.__storage.info.id.isin(self.__titles)].index.values
         )
 
@@ -142,7 +141,7 @@ class Recommender(IRecommender):
                 self.__storage.map(self.__client.indexes(self.__lists_exclude)),
                 dtype=np.uint32,
             )
-            if not is_titles
+            if not self.__is_titles
             else np.array([])
         )
 
@@ -151,7 +150,7 @@ class Recommender(IRecommender):
                 -1,
                 1,
             )
-            if self.__weighted and not is_titles
+            if self.__weighted and not self.__is_titles
             else np.ones(
                 (len(self.__indexes_include), 1),
                 dtype=np.uint8,
@@ -159,12 +158,12 @@ class Recommender(IRecommender):
         )
 
         self.__scores = (
-            minmax_scale(self.__scores, feature_range=self.__scale_range)
-            if self.__scaled and not is_titles
+            minmax_scale(self.__scores, feature_range=tuple(self.__scale_range))
+            if self.__scaled and not self.__is_titles
             else self.__scores
         )
 
-        self.__sum: np.uint32 = self.__scores.sum() if self.__weighted and not is_titles else 1
+        self.__sum: np.uint32 = self.__scores.sum() if self.__weighted and not self.__is_titles else 1
         self.__matrix: np.ndarray = self.__storage.data.iloc[
             :,
             self.__storage.metadata[self.__storage.metadata.column_name.isin(self.__columns)].index,
@@ -198,8 +197,8 @@ class Recommender(IRecommender):
     def __str__(self):
         return self.__repr__()
 
-    def recommend(self) -> DataFrame:
-        return self.__chunk_calculate() if len(self.__indexes_include) else pd.DataFrame()
+    def recommend(self) -> np.ndarray:
+        return self.__chunk_calculate() if len(self.__indexes_include) else np.array([])
 
     def __calculate_vector(self, indexes: np.ndarray, scores: np.ndarray) -> np.ndarray:
         """Calculate vector of recommendations for given indexes and scores.
@@ -214,7 +213,7 @@ class Recommender(IRecommender):
 
         Returns
         -------
-        np.ndarray
+        ndarray
             Vector of recommendations.
         """
         return (
@@ -232,8 +231,8 @@ class Recommender(IRecommender):
 
         Returns
         -------
-        DataFrame
-            DataFrame with titles and scores of recommendations. Current implementation bounded to constant top 20
+        ndarray
+            ndarray with titles and scores of recommendations. Current implementation bounded to constant top 20
             recommendations.
         """
         result_vector = np.zeros((self.__matrix.shape[0],))

@@ -1,162 +1,41 @@
 import os
 
-import dash
 import dash_bootstrap_components as dbc
-import pandas as pd
 from dash import dcc, html
 
 from ..storage import LocalStorage
-from . import AppData, IdHolder
+from . import AppData
+from .utils.dcw import DCWDash
+from .utils.IdHolder import IdHolder as ID
+from .utils.UserInterfaceEN import UserInterfaceEN as UI
 
-app = dash.Dash(
+app = DCWDash(
     __name__,
     external_stylesheets=[dbc.themes.BOOTSTRAP, dbc.icons.BOOTSTRAP],
-    title='Anime Recommender',
+    title=UI.title_main,
     assets_folder=os.getcwd() + '/assets',
 )
 
 app_data = AppData()
 app_data.storage = LocalStorage()
 
-RESULT_AMOUNT = int(os.environ.get('RESULT_AMOUNT'))
 
+RESULT_AMOUNT = int(os.environ.get('RESULT_AMOUNT'))
 INCLUDED_LISTS = ['Completed']
 EXCLUDED_LISTS = ['Dropped', 'Watching', 'Rewatching', 'Planning', 'Paused']
 
-app_data.storage.info.sort_values(by='popularity', ascending=False, inplace=True)
-
-ITEMS_ENG = [
-    {
-        'label': html.Div(
-            [
-                html.Div(
-                    style={
-                        'background-color': color,
-                        'background-image': f'url({img_small})',
-                    },
-                    className='dropdown-image',
-                ),
-                html.Div(
-                    [
-                        html.Span(english, className='dropdown-title'),
-                        html.Div(
-                            [startDate_year, ' ', format],
-                            className='dropdown-info',
-                        ),
-                    ],
-                    className='dropdown-text-container',
-                ),
-            ],
-            className='dropdown-item',
-        ),
-        'value': id,
-        'search': english.lower(),
-    }
-    for english, id, img_small, color, startDate_year, format in zip(
-        app_data.storage.info.english.values,
-        app_data.storage.info.id.values,
-        app_data.storage.info.img_small.values,
-        app_data.storage.info.color.values,
-        app_data.storage.info.startDate_year.values,
-        app_data.storage.info.format.values,
-    )
-]
-
-ITEMS_ROMAJI = [
-    {
-        'label': html.Div(
-            [
-                html.Div(
-                    style={
-                        'background-color': color,
-                        'background-image': f'url({img_small})',
-                    },
-                    className='dropdown-image',
-                ),
-                html.Div(
-                    [
-                        html.Span(romaji, className='dropdown-title'),
-                        html.Div(
-                            [startDate_year, ' ', format],
-                            className='dropdown-info',
-                        ),
-                    ],
-                    className='dropdown-text-container',
-                ),
-            ],
-            className='dropdown-item',
-        ),
-        'value': id,
-        'search': romaji.lower(),
-    }
-    for romaji, id, img_small, color, startDate_year, format in zip(
-        app_data.storage.info.romaji.values,
-        app_data.storage.info.id.values,
-        app_data.storage.info.img_small.values,
-        app_data.storage.info.color.values,
-        app_data.storage.info.startDate_year.values,
-        app_data.storage.info.format.values,
-    )
-]
-
-ITEMS_NATIVE = [
-    {
-        'label': html.Div(
-            [
-                html.Div(
-                    style={
-                        'background-color': color,
-                        'background-image': f'url({img_small})',
-                    },
-                    className='dropdown-image',
-                ),
-                html.Div(
-                    [
-                        html.Span(native, className='dropdown-title'),
-                        html.Div(
-                            [startDate_year, ' ', format],
-                            className='dropdown-info',
-                        ),
-                    ],
-                    className='dropdown-text-container',
-                ),
-            ],
-            className='dropdown-item',
-        ),
-        'value': id,
-        'search': native.lower(),
-    }
-    for native, id, img_small, color, startDate_year, format in zip(
-        app_data.storage.info.native.values,
-        app_data.storage.info.id.values,
-        app_data.storage.info.img_small.values,
-        app_data.storage.info.color.values,
-        app_data.storage.info.startDate_year.values,
-        app_data.storage.info.format.values,
-    )
-]
-
+by_popularity = app_data.storage.info.sort_values(by='popularity', ascending=False)
 app_data.storage.info.sort_values(by='id', ascending=True, inplace=True)
 
-language_options_username = [
-    dbc.DropdownMenuItem('english', id=IdHolder.english_username.name),
-    dbc.DropdownMenuItem('romaji', id=IdHolder.romaji_username.name),
-    dbc.DropdownMenuItem('native', id=IdHolder.native_username.name),
-]
-
-language_options_titles = [
-    dbc.DropdownMenuItem('english', id=IdHolder.english.name),
-    dbc.DropdownMenuItem('romaji', id=IdHolder.romaji.name),
-    dbc.DropdownMenuItem('native', id=IdHolder.native.name),
+language_options = [
+    dbc.DropdownMenuItem(UI.lang_dropdown_en, id=ID.english),
+    dbc.DropdownMenuItem(UI.lang_dropdown_rj, id=ID.romaji),
+    dbc.DropdownMenuItem(UI.lang_dropdown_na, id=ID.native),
 ]
 
 source_options = [
-    dbc.DropdownMenuItem('Anilist', id=IdHolder.Anilist.name),
+    dbc.DropdownMenuItem(UI.source_dropdown_anilist, id=ID.Anilist),
 ]
-
-########################################################################################################################
-#                                                Dynamic content                                                       #
-########################################################################################################################
 
 tooltip = lambda text, id, placement='auto': dbc.Tooltip(
     text,
@@ -166,33 +45,73 @@ tooltip = lambda text, id, placement='auto': dbc.Tooltip(
 )
 
 question_mark = lambda id: html.Sup(
-    [
-        html.I(className='bi bi-question-circle-fill', style={'font-weight': 'bold'}),
-    ],
-    style={
-        'margin-left': '5px',
-        'font-size': '1rem',
-        'vertical-align': 'top',
-        'position': 'relative',
-        'top': '-55px',
-        'left': '15vw',
-        'cursor': 'pointer',
-        'z-index': '1000',
-    },
+    html.I(className='bi bi-question-circle-fill'),
     id=id,
+    className='question-mark',
 )
 
-alert = lambda text: dbc.Alert(
+alert = lambda: dbc.Alert(
     [
-        html.I(
-            className='bi bi-exclamation-triangle-fill',
-            style={'font-size': '16px', 'font-weight': 'bold', 'margin-right': '10px'},
+        html.I(className='bi bi-exclamation-triangle-fill'),
+        html.Span(
+            [
+                UI.not_found_alert_text_start,
+                html.A(
+                    f'https://anilist.co/user/{app_data.username_searchbar}/',
+                    href=f'https://anilist.co/user/{app_data.username_searchbar}/',
+                    target='_blank',
+                    className='alert-link',
+                ),
+                UI.not_found_alert_text_end,
+            ],
         ),
-        text,
     ],
     color='danger',
-    style={'height': 'fit-content', 'margin-top': '0rem'},
+    id=ID.not_found_alert,
 )
+
+
+def option_template(options: list[int], language: str = 'english'):
+    return [
+        {
+            'label': html.Div(
+                [
+                    html.Div(
+                        style={
+                            'background-color': row.color,
+                            'background-image': f'url({row.img_small})',
+                        },
+                        className='dropdown-image',
+                    ),
+                    html.Div(
+                        [
+                            html.Span(
+                                (
+                                    row.english
+                                    if language == 'english'
+                                    else row.romaji
+                                    if language == 'romaji'
+                                    else row.native
+                                ),
+                                className='dropdown-title',
+                            ),
+                            html.Div(
+                                [row.startDate_year, ' ', row.format],
+                                className='dropdown-info',
+                            ),
+                        ],
+                        className='dropdown-text-container',
+                    ),
+                ],
+                className='dropdown-item',
+            ),
+            'value': row.id,
+            'search': (
+                row.english if language == 'english' else row.romaji if language == 'romaji' else row.native
+            ).lower(),
+        }
+        for row in by_popularity.query('id in @options').itertuples()
+    ]
 
 
 def card(s):
@@ -206,12 +125,12 @@ def card(s):
                         html.Div(
                             f'{s.proba:.0%}',
                             style={
-                                'color': f'''{'white' if s.color else 'black'}''',
+                                'color': f"""{'white' if s.color else 'black'}""",
                             },
                             className='probability-score',
                         ),
                         style={
-                            'background-color': f'''{s.color if s.color else 'white'}''',
+                            'background-color': f"""{s.color if s.color else 'white'}""",
                         },
                         className='probability-container',
                     ),
@@ -237,13 +156,13 @@ def card(s):
                         [
                             html.H6(
                                 html.A(
-                                    f'''{s[app_data.language][:title_len]}{'...' if len(s[app_data.language]) > title_len else ''}''',
-                                    href=f'''https://anilist.co/anime/{s['id']}''',
+                                    f"""{s[app_data.language][:title_len]}{'...' if len(s[app_data.language]) > title_len else ''}""",
+                                    href=f"""https://anilist.co/anime/{int(s['id'])}""",
                                     target='_blank',
                                     style={
-                                        'color': f'''{s.color if s.color else 'black'}''',
+                                        'color': f"""{s.color if s.color else 'black'}""",
                                     },
-                                    id=f'''tooltip-title-{s['id']}''',
+                                    id=f"""tooltip-title-{s['id']}""",
                                     className='card-title',
                                 ),
                             ),
@@ -254,12 +173,12 @@ def card(s):
                         ],
                         className='mt-auto card-text-container',
                     ),
-                    tooltip(s[app_data.language], f'''tooltip-title-{s['id']}''', 'top')
+                    tooltip(s[app_data.language], f"""tooltip-title-{s['id']}""", 'top')
                     if len(s[app_data.language]) > title_len
                     else '',
                     html.A(
                         className='stretched-link',
-                        href=f'''https://anilist.co/anime/{s['id']}''',
+                        href=f"""https://anilist.co/anime/{int(s['id'])}""",
                         target='_blank',
                     ),
                 ],
@@ -274,8 +193,8 @@ modal_body = lambda header, text: [
     dbc.ModalBody(text),
     dbc.ModalFooter(
         dbc.Button(
-            'Close',
-            id=IdHolder.close_button.name,
+            UI.button_close,
+            id=ID.close_button,
             className='ms-auto',
             n_clicks=0,
         ),
@@ -283,45 +202,46 @@ modal_body = lambda header, text: [
 ]
 
 user_lists = lambda lists: [
-    html.P('User Lists', className='title-mobile'),
+    html.P(UI.title_user_lists, className='title-mobile'),
     html.I(
         [
-            'User lists to include or exclude from recommendations. Entries from ',
-            html.B('Included'),
-            ' take part in calculation recommendations. Entries from ',
-            html.B('Excluded'),
-            ' do not participate in calculation, but simply excluded from recommendation results. ',
+            UI.user_lists_desc_1,
+            html.B(UI.user_lists_desc_2),
+            UI.user_lists_desc_3,
+            html.B(UI.user_lists_desc_4),
+            UI.user_lists_desc_5,
         ],
-        style={'margin': '1rem 0', 'display': 'inline-block'},
+        # style={"margin": "1rem 0", "display": "inline-block"},
+        className='user-lists-description',
     ),
-    html.H5('Included:'),
+    html.H5(UI.included_list_title),
     dbc.Checklist(
         options=lists,
         value=INCLUDED_LISTS,
-        id=IdHolder.included_list.name,
+        id=ID.included_list,
     ),
-    html.H5('Excluded:'),
+    html.H5(UI.excluded_list_title),
     dbc.Checklist(
         options=lists,
         value=EXCLUDED_LISTS,
-        id=IdHolder.excluded_list.name,
+        id=ID.excluded_list,
     ),
 ]
 
 alert_features = dbc.Alert(
     [
         html.I(className='bi bi-info-circle-fill me-2'),
-        'At least one feature must be selected',
+        UI.feature_selection_aleart,
     ],
     color='info',
-    className='d-flex align-items-center',
-    style={
-        'height': 'fit-content',
-        'font-size': '0.8em',
-        'margin': '0px',
-        'margin-bottom': '1rem',
-        'padding': '2px 5px',
-    },
+    className='d-flex align-items-center feature-alert',
+    # style={
+    #     "height": "fit-content",
+    #     "font-size": "0.8em",
+    #     "margin": "0px",
+    #     "margin-bottom": "1rem",
+    #     "padding": "2px 5px",
+    # },
 )
 
 ########################################################################################################################
@@ -331,84 +251,70 @@ alert_features = dbc.Alert(
 search_type_switch = html.Div(
     [
         dbc.Switch(
-            id=IdHolder.search_type_switch.name,
-            label='By username',
+            id=ID.search_type_switch,
+            label=UI.by_username,
             value=False,
         ),
     ],
 )
 
-search_input = dbc.Col(
-    [
-        dbc.InputGroup(
-            [
-                dbc.DropdownMenu(
-                    source_options,
-                    label=f'Anilist',
-                    id=IdHolder.username_source.name,
-                ),  # TODO: add more sources
-                dbc.InputGroupText('@'),
-                dbc.Input(
-                    placeholder='Username',
-                    id=IdHolder.username_searchbar.name,
-                    type='text',
-                ),
-                dbc.DropdownMenu(
-                    language_options_username,
-                    label='english',
-                    id=IdHolder.titles_language_username.name,
-                ),
-            ],
-            style={'height': '100%', 'margin': '0px'},
-        ),
-    ],
-    style={'background-f': 'white'},  # 'margin-left': '2rem'},
-    id=IdHolder.username_searchbar_container.name,
-    align='center',
+user_search = (
+    dbc.DropdownMenu(source_options, label=UI.source_dropdown_anilist, id=ID.source),
+    dbc.InputGroupText(UI.at, id=ID.input_group_text),
+    dbc.Input(
+        placeholder=UI.placeholder_username,
+        id=ID.username_searchbar,
+        type='text',
+        # style={
+        #     "display": "block",
+        #     "width": "100%",
+        # },
+    ),
 )
 
-search_input1 = dbc.Col(
-    [
-        dbc.ListGroup(
-            [
-                dcc.Dropdown(
-                    ITEMS_ENG[:RESULT_AMOUNT],
-                    placeholder='Type to search',
-                    multi=True,
-                    id=IdHolder.item_searchbar.name,
-                    maxHeight=400,
-                    optionHeight=65,
-                    persistence=True,
-                    persistence_type='local',
-                ),
-                dbc.DropdownMenu(
-                    language_options_titles,
-                    label='english',
-                    id=IdHolder.titles_language_titles.name,
-                ),
-            ],
-            className='list-group-horizontal',
-        ),
-    ],
-    style={'background-color': 'white', 'margin-left': '2rem', 'display': 'none'},
-    id=IdHolder.item_searchbar_container.name,
+title_search = dcc.Dropdown(
+    option_template(by_popularity.id.values[:RESULT_AMOUNT]),
+    placeholder=UI.placeholder_items,
+    multi=True,
+    id=ID.item_searchbar,
+    maxHeight=400,
+    optionHeight=65,
+    persistence=True,
+    persistence_type='local',
+    # style={"display": "none"},
+)
+
+search_input = dbc.Col(
+    dbc.InputGroup(
+        [
+            *user_search,
+            title_search,
+            dbc.DropdownMenu(
+                language_options,
+                label=UI.lang_dropdown_en,
+                id=ID.titles_language,
+            ),
+        ],
+        id=ID.input_group,
+    ),
+    id=ID.searchbar_container,
 )
 
 generate_button = html.Div(
     dbc.Button(
-        'Generate',
+        UI.button_generate,
         color='primary',
-        id=IdHolder.generate_button.name,
+        id=ID.generate_button,
     ),
-    style={'background-color': 'white'},
 )
 
 header = html.Div(
     [
-        html.H2('Anime Recommender'),
+        html.H2(UI.title_main),
+        # button for mobile view
         dbc.Button(
             [
-                html.Span('Parameters'),
+                html.Span(UI.title_parameters),
                 html.I(
                     className='bi bi-arrow-right',
                     style={'font-weight': 'bold', 'margin-left': '0.5rem'},
@@ -423,16 +329,11 @@ searchbar = html.Div(
     [
         search_type_switch,
         html.Div(
-            [
-                search_input,
-                search_input1,
-            ],
+            search_input,
             className='searchbar-container',
-            # style={'width': '100%'},
         ),
         generate_button,
     ],
-    style={'background-color': 'white', 'min-height': '100px'},
     className='search-container',
 )
 
@@ -441,11 +342,11 @@ output_container = dbc.Row(
         dbc.Spinner(
             dbc.Col(
                 [],
-                id=IdHolder.output_container.name,
+                id=ID.output_container,
             ),
         ),
     ],
-    style={'background-color': 'white', 'height': 'fit-content'},
+    className='output-container',
 )
 
 main = dbc.Col(
@@ -466,7 +367,7 @@ main = dbc.Col(
         ),
     ],
     width=8,
-    style={'background-color': 'white', 'height': '100%'},
+    # style={"height": "100%"},
     class_name='main-column',
 )
 
@@ -482,7 +383,7 @@ header = dbc.Row(
                     [
                         html.Div(
                             [
-                                'Parameters',
+                                UI.title_parameters,
                             ],
                         ),
                         html.Div(
@@ -502,11 +403,9 @@ header = dbc.Row(
 
 recommender_type = dbc.AccordionItem(
     [
-        html.P('Recommendation Engine', className='title-mobile'),
+        html.P(UI.title_rec_engine, className='title-mobile'),
         html.P(
-            html.I(
-                'Recommendation engine stands for the algorithm used to generate recommendations. Standard (linear kernel) is the default engine and works good for most cases. Experimental (rbf kernel) is awful for large number of titles, but can give some interesting results for individual one(s).',
-            ),
+            html.I(UI.rec_engine_desc_1),
             style={'margin-bottom': '1rem'},
         ),
         dbc.RadioItems(
@@ -515,17 +414,17 @@ recommender_type = dbc.AccordionItem(
                 {'label': 'Experimental', 'value': 'rbf_kernel'},
             ],
             value='linear_kernel',
-            id=IdHolder.recommender_type.name,
+            id=ID.recommender_type,
             style={'cursor': 'pointer'},
         ),
     ],
-    title='Recommendation Engine',
+    title=UI.title_rec_engine,
 )
 
 user_lists_container = dbc.AccordionItem(
     user_lists([]),
-    title='User Lists',
-    id=IdHolder.user_lists.name,
+    title=UI.title_user_lists,
+    id=ID.user_lists,
     className='user-lists-container',
 )
 
@@ -557,11 +456,9 @@ scaled_options = [
 
 included_features = dbc.AccordionItem(
     [
-        html.P('Included Features', className='title-mobile'),
+        html.P(UI.title_features, className='title-mobile'),
         html.P(
-            html.I(
-                'Each title has individual features that make it unique and distinguish from others. Those features could be included in calculation and potentially affect recommendation results. The further information about each feature is presented below.',
-            ),
+            html.I(UI.features_desc_1),
             style={'margin-bottom': '1rem'},
         ),
         dbc.Accordion(
@@ -569,98 +466,80 @@ included_features = dbc.AccordionItem(
                 [
                     html.Ol(
                         [
-                            html.Li(
-                                'Tags: list of tags that title belongs to with their respective scores.',
-                            ),
-                            html.Li('Genres: list of genres that title belongs to.'),
-                            html.Li('Average Score: average score of title.'),
-                            html.Li('Format: format of title (TV, Movie, etc...).'),
-                            html.Li('Number of Episodes: number of episodes in title.'),
-                            html.Li('Duration: duration of each episode in minutes.'),
-                            html.Li(
-                                'Source: source of title (Manga, Light Novel, etc...).',
-                            ),
-                            html.Li('Origin: origin of title (Japan, China, etc...).'),
-                            html.Li(
-                                'Season: season of release (Winter, Spring, etc...).',
-                            ),
-                            html.Li('Is Adult: whether title is adult or not.'),
-                            html.Li(
-                                'Favorites: number of users that added title to their favorites.',
-                            ),
-                            html.Li('Popularity: AniList popularity score.'),
-                            html.Li('Studios: list of studios that worked on title.'),
-                            html.Li(
-                                'Producers: list of producers that worked on title.',
-                            ),
+                            html.Li(UI.features_desc_2),
+                            html.Li(UI.features_desc_3),
+                            html.Li(UI.features_desc_4),
+                            html.Li(UI.features_desc_5),
+                            html.Li(UI.features_desc_6),
+                            html.Li(UI.features_desc_7),
+                            html.Li(UI.features_desc_8),
+                            html.Li(UI.features_desc_9),
+                            html.Li(UI.features_desc_10),
+                            html.Li(UI.features_desc_11),
+                            html.Li(UI.features_desc_12),
+                            html.Li(UI.features_desc_13),
+                            html.Li(UI.features_desc_14),
+                            html.Li(UI.features_desc_15),
                         ],
                     ),
                 ],
-                title='Feature description',
+                title=UI.title_features_desc,
                 class_name='feature-description',
             ),
             start_collapsed=True,
         ),
-        html.Div([], id=IdHolder.features_alert.name),
+        html.Div([], id=ID.features_alert),
         dbc.Checklist(
             options=feature_options,
             value=['tags'],
-            id=IdHolder.features_list.name,
+            id=ID.features_list,
             style={'cursor': 'pointer'},
         ),
     ],
-    title='Included Features',
+    title=UI.title_features,
 )
 
 weighted_container = dbc.Container(
     [
-        html.H5(
-            [
-                'Weighted',
-            ],
-        ),
+        html.H5(UI.title_weigted),
         html.I(
-            'Whether to include user scores in calculation or not. Each score applies as a coefficient to the corresponding title that user watched.',
+            UI.weighted_desc_1,
             style={'margin': '0.5rem 0', 'display': 'inline-block'},
         ),
         dbc.Checklist(
             options=weighted_options,
             value=[True],
-            id=IdHolder.is_weighted.name,
+            id=ID.is_weighted,
             style={'cursor': 'pointer'},
         ),
     ],
-    id=IdHolder.weighted_container.name,
+    id=ID.weighted_container,
 )
 
 scaled_container = dbc.Container(
     [
-        html.H5(
-            [
-                'Scaled',
-            ],
-        ),
+        html.H5(UI.title_scaled),
         html.I(
             [
-                'While usual scores make a linear effect on the results,',
+                UI.scaled_desc_1,
                 html.Br(),
                 html.Span(
-                    '(e.g. if two titles have the same recommendation result but the first has score 5 and the second score 10, the latter will be two times more significant)',
+                    UI.scaled_desc_2,
                     style={'margin': '0.5rem 0', 'display': 'inline-block'},
                 ),
                 html.Br(),
-                'scaled ones introduces intuitively more logical approach — titles with scores from 2 to 5 are probably not much better (or not much different) compared to ones with 1 scores. And vice versa, for scores from 7 to 10.',
+                UI.scaled_desc_3,
             ],
             style={'margin-bottom': '1rem', 'display': 'inline-block'},
         ),
         dbc.Checklist(
             options=scaled_options,
             value=[],
-            id=IdHolder.is_scaled.name,
+            id=ID.is_scaled,
             style={'cursor': 'pointer'},
         ),
     ],
-    id=IdHolder.scaled_container.name,
+    id=ID.scaled_container,
 )
 
 score_container = dbc.AccordionItem(
@@ -669,13 +548,13 @@ score_container = dbc.AccordionItem(
         scaled_container,
         dbc.Container(
             [
-                html.P('', id=IdHolder.score_description.name),
-                dcc.Graph(id=IdHolder.graph.name),
+                html.P('', id=ID.score_description),
+                dcc.Graph(id=ID.graph),
                 dcc.RangeSlider(
                     min=-10,
                     max=10,
                     value=[-5, 4],
-                    id=IdHolder.scale_slider.name,
+                    id=ID.scale_slider,
                     updatemode='drag',
                     tooltip={'placement': 'bottom', 'always_visible': True},
                     allowCross=False,
@@ -685,27 +564,27 @@ score_container = dbc.AccordionItem(
                 ),
                 html.Div(
                     dbc.Button(
-                        'Reset',
-                        id=IdHolder.reset_graph_button.name,
+                        UI.button_reset,
+                        id=ID.reset_graph_button,
                         size='sm',
                         class_name='',
                     ),
                     className='reset-button-container',
                 ),
             ],
-            id=IdHolder.graph_container.name,
+            id=ID.graph_container,
             style={'display': 'none', 'padding': '0'},
         ),
     ],
-    title='Score',
-    id=IdHolder.score_container.name,
+    title=UI.title_score,
+    id=ID.score_container,
 )
 
 apply_button = html.Div(
     dbc.Button(
-        'Apply',
+        UI.button_apply,
         color='primary',
-        id=IdHolder.apply_button.name,
+        id=ID.apply_button,
         style={
             'position': 'relative',
             'margin-left': 'auto',
@@ -762,7 +641,7 @@ info_button = [
             className='bi bi-info-lg',
             style={'font-weight': 'bold'},
         ),
-        id=IdHolder.info_button.name,
+        id=ID.info_button,
         color='primary',
         n_clicks=0,
         style={
@@ -778,28 +657,28 @@ info_button = [
     dbc.Toast(
         html.P(
             [
-                html.B('Anilist: '),
+                html.B(UI.toast_desc_1),
                 html.A(
-                    'AlimU',
+                    UI.toast_desc_2,
                     href='https://anilist.co/user/AlimU/',
                     target='_blank',
                 ),
                 html.Br(),
-                html.B('GitHub: '),
+                html.B(UI.toast_desc_3),
                 html.A(
-                    'Anime-Recommender',
+                    UI.toast_desc_4,
                     href='https://github.com/AlimU11/Anime-Recommender',
                     target='_blank',
                 ),
                 html.Br(),
                 html.I(
-                    'you can give me a star on GitHub if you like a project or open an issue if you found a bug or have any suggestions',
+                    UI.toast_desc_5,
                     style={'font-size': '0.8rem'},
                 ),
             ],
             style={'margin-bottom': '0'},
         ),
-        id=IdHolder.info_container.name,
+        id=ID.info_container,
         header='Contacts',
         is_open=False,
         dismissable=True,
@@ -832,10 +711,10 @@ app.layout = html.Div(
                         [
                             modal_body('', ''),
                         ],
-                        id=IdHolder.modal_notification.name,
+                        id=ID.modal_notification,
                         is_open=False,
                     ),
-                    html.Span(className='hidden', id=IdHolder.hidden.name),
+                    html.Span(className='hidden', id=ID.hidden),
                 ],
                 class_name='main-card-body',
             ),
@@ -846,6 +725,14 @@ app.layout = html.Div(
                 'border': 'none',
             },
             class_name='main-card',
+        ),
+        dbc.Button(
+            id=ID.trigger_modal_update,
+            style={'display': 'none'},
+        ),
+        dbc.Button(
+            id=ID.trigger_switch_update,
+            style={'display': 'none'},
         ),
         *info_button,
     ],

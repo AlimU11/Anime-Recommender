@@ -1,7 +1,5 @@
 import re
 
-import nltk
-
 from . import ITextProcessor
 
 
@@ -25,6 +23,8 @@ class TextProcessor(ITextProcessor):
         return self.text
 
     def apply_stopwords(self) -> str:
+        import nltk
+
         nltk.download('stopwords', quiet=True)
         from nltk.corpus import stopwords
 
@@ -35,6 +35,8 @@ class TextProcessor(ITextProcessor):
         return self.text
 
     def lemmatize(self) -> str:
+        import nltk
+
         nltk.download('wordnet', quiet=True)
         from nltk import WordNetLemmatizer
 

@@ -1,8 +1,13 @@
-from enum import Enum, auto
+from enum import auto
+
+from .StrEnum import StrEnum
 
 
-class IdHolder(Enum):
+class IdHolder(StrEnum):
     """ID holder for dash components"""
+
+    trigger_modal_update = auto()
+    trigger_switch_update = auto()
 
     # modal window
     modal_notification = auto()
@@ -15,23 +20,19 @@ class IdHolder(Enum):
 
     # dropdowns and inputs
     username_searchbar = auto()
-    username_searchbar_container = auto()
     item_searchbar = auto()
-    item_searchbar_container = auto()
+    searchbar_container = auto()
+    input_group = auto()
+    input_group_text = auto()
 
     # title language and profile source
-    username_source = auto()
-    titles_language_username = auto()
-    titles_language_titles = auto()
+    source = auto()
+    titles_language = auto()
 
     # buttons in dropdown
     english = auto()
     romaji = auto()
     native = auto()
-
-    english_username = auto()
-    romaji_username = auto()
-    native_username = auto()
 
     Anilist = auto()
 
@@ -71,3 +72,6 @@ class IdHolder(Enum):
     info_button = auto()
 
     hidden = auto()
+
+    # alert
+    not_found_alert = auto()

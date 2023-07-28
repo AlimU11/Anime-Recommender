@@ -159,6 +159,20 @@ h5 {
     height: 100%;
 }
 
+.main-column{
+    height: 100%;
+}
+
+#not_found_alert {
+    font-size: 16px;
+    font-weight: bold;
+    margin-right: 10px;
+}
+
+.alert-link {
+    text-underline-position: under;
+}
+
 .dropdown-menu.show {
     padding-left: 0rem;
 }
@@ -191,6 +205,12 @@ h5 {
 
 .Select-clear-zone,
 .Select-arrow-zone {
+    font-size: 1.5rem;
+    width: 30px;
+}
+
+.Select-clear,
+.Select-arrow {
     font-size: 1.5rem;
 }
 
@@ -409,7 +429,8 @@ h5 {
 }
 
 .search-container {
-    display: flex;
+    display: grid;
+    grid-template-columns: max-content 1fr max-content;
     flex-direction: row;
     justify-content: space-between;
     flex-wrap: wrap;
@@ -462,6 +483,69 @@ h5 {
 
 .settings-column {
     display: block !important;
+}
+
+/* style moved from layout.py */
+
+#input_group {
+    /* flex-wrap: nowrap; */
+    display: grid;
+    /* grid-template-columns: 1fr max-content; */
+    grid-template-columns: max-content max-content 1fr max-content;
+}
+
+.Select.has-value.is-clearable.is-searchable.Select--multi {
+    display: block;
+}
+
+.bi.bi-question-circle-fill {
+    font-weight: bold;
+}
+
+.question-mark {
+    margin-left: 5px;
+    font-size: 1rem;
+    vertical-align: top;
+    position: relative;
+    top: -55px;
+    left: 15vw;
+    cursor: pointer;
+    z-index: 1000;
+}
+
+#alert {
+    height: fit-content;
+    margin-left: 0rem;
+}
+
+.user-lists-description {
+    margin: 1rem 0;
+    display: inline-block;
+}
+
+.feature-alert {
+    height: fit-content;
+    font-size: 0.8em;
+    margin: 0px;
+    margin-bottom: 1rem;
+    padding: 2px 5px;
+}
+
+#username_searchbar {
+    display: block;
+    width: 100%;
+}
+
+#item_searchbar {
+    display: none;
+}
+
+.output-container {
+    height: fit-content;
+}
+
+.search-container {
+    min-height: 100px;
 }
 
 @media screen and (max-width: 1600px) {
@@ -641,6 +725,7 @@ h5 {
     #item_searchbar {
         grid-row: 2;
         grid-column: 1/3;
+        margin-top: 1rem;
     }
 
     #titles_language_titles {
@@ -683,6 +768,8 @@ h5 {
         margin-right: 0;
         margin-top: 1em;
     }
+
+    /* FIXME: language selector has incorrect left borders when search switch to item state */
 }
 
 @media screen and (max-width: 460px) {
@@ -690,6 +777,52 @@ h5 {
     #info_container {
         left: 0 !important;
         width: 100% !important;
+    }
+
+    #input_group {
+        grid-auto-columns: 1fr;
+        grid-auto-flow: column;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        grid-template-columns: none !important;
+    }
+
+    #input_group>button:first-of-type {
+        grid-row: 1;
+        grid-column: 1 / 4;
+        margin-right: 0.5rem;
+    }
+
+    #input_group>button:last-of-type {
+        grid-row: 1;
+        grid-column: 4 / 7;
+        margin-left: 0.5rem;
+    }
+
+    #input_group_text {
+        /* width: fit-content; */
+        grid-row: 2;
+        grid-column: 1 / 2;
+        height: fit-content;
+        align-self: end;
+        border-top-left-radius: 4px;
+        border-bottom-left-radius: 4px;
+        margin-top: 1em;
+    }
+
+    #item_searchbar {
+        grid-column: 1 / 7;
+        margin-top: 1rem;
+    }
+
+    #username_searchbar {
+        grid-row: 2;
+        grid-column: 2 / 7;
+        width: 100%;
+        border-top-right-radius: 4px;
+        border-bottom-right-radius: 4px;
+        border-top-left-radius: 0px;
+        border-bottom-left-radius: 0px;
+        margin-top: 1em;
     }
 
     .header-container {
@@ -711,39 +844,8 @@ h5 {
         grid-template-columns: min-content 1fr 1fr;
     }
 
-    #username_searchbar_container>.input-group>button {
+    #searchbar_container>.input-group>button {
         border-radius: 4px;
-    }
-
-    #username_searchbar_container>.input-group>button:first-of-type {
-        grid-row: 1;
-        grid-column: 1/3;
-        margin-right: 1em;
-    }
-
-    #username_searchbar_container>.input-group>button:last-of-type {
-        grid-row: 1;
-        grid-column: 3;
-    }
-
-    #username_searchbar_container>.input-group>.input-group-text {
-        width: fit-content;
-        grid-row: 2;
-        grid-column: 1;
-        border-top-left-radius: 4px;
-        border-bottom-left-radius: 4px;
-        margin-top: 1em;
-    }
-
-    #username_searchbar {
-        grid-row: 2;
-        grid-column: 2 / 4;
-        width: 100%;
-        border-top-right-radius: 4px;
-        border-bottom-right-radius: 4px;
-        border-top-left-radius: 0px;
-        border-bottom-left-radius: 0px;
-        margin-top: 1em;
     }
 
     .searchbar-container {
@@ -751,7 +853,7 @@ h5 {
     }
 
     #item_searchbar>.Select>.Select-control {
-        display: grid;
+        display: grid !important;
     }
 
     .Select-clear-zone {
@@ -761,7 +863,7 @@ h5 {
 
     .Select-arrow-zone {
         grid-row: 3;
-        width: 100%;
+        width: 100% !important;
     }
 }
 
@@ -772,9 +874,30 @@ h5 {
 }
 
 @media screen and (max-width: 250px) {
-    #item_searchbar_container {
+    /* #item_searchbar_container {
         margin-top: -1em;
+    } */
+
+    /* #input_group>button:first-of-type {
+        grid-row: 1;
+        grid-column: 1;
     }
+
+    #input_group>button:last-of-type {
+        grid-row: 2;
+        grid-column: 1;
+    }
+
+    #username_searchbar {
+        grid-row: 3;
+        grid-column: 1;
+    }
+
+    #item_searchbar {
+        grid-row: 3;
+        grid-column: 1;
+    } */
+
 }
 
 @media screen and (max-width: 210px) {
@@ -815,29 +938,39 @@ h5 {
         padding: 0px;
     }
 
-    #username_searchbar_container>.input-group>button:first-of-type {
+    #searchbar_container>.input-group>button:first-of-type {
         grid-row: 1;
-        grid-column: 1/4;
+        grid-column: 1;
         margin-top: 1em;
         margin-right: 0;
     }
 
-    #username_searchbar_container>.input-group>button:last-of-type {
+    #searchbar_container>.input-group>button:last-of-type {
         grid-row: 2;
-        grid-column: 1/4;
+        grid-column: 1;
         margin-top: 1em;
+        margin-left: 0;
     }
 
-    #username_searchbar_container>.input-group>.input-group-text {
+    #searchbar_container>.input-group>.input-group-text {
         display: none;
     }
 
     #username_searchbar {
         grid-row: 3;
-        grid-column: 1 / 4;
+        grid-column: 1;
         margin-top: 1em;
         border-top-left-radius: 4px;
         border-bottom-left-radius: 4px;
+    }
+
+    #item_searchbar {
+        grid-row: 3;
+        grid-column: 1;
+    }
+
+    #input_group_text {
+        display: none !important;
     }
 
     #generate_button {

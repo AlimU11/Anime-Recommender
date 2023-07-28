@@ -7,7 +7,6 @@ from typing import Final
 
 import requests
 from loguru import logger
-from ratelimit import limits
 
 from . import IExtractor, query, stage_file
 
@@ -109,11 +108,6 @@ class APIExtractor(IExtractor):
 
         logger.info('Done.')
 
-    # NOTE: Avoid rate limit https://anilist.gitbook.io/anilist-apiv2-docs/overview/rate-limiting
-    @limits(
-        calls=__API_LIMIT,
-        period=__API_PERIOD,
-    )
     def __extract(self) -> None:
         """Extract data from AniList API."""
         logger.info('Extracting data...')
@@ -125,6 +119,8 @@ class APIExtractor(IExtractor):
             logger.info(f'''Progress {page}/{self.__metadata['pages']} (estimated)''')
 
             response = self.__get_response(page)
+
+            time.sleep(0.7)
 
             page_info, media = response.json()['data']['Page'].values()
 

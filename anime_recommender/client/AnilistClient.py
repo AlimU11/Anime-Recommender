@@ -41,7 +41,7 @@ class AnilistClient(IClient):
             f'Client(\n'
             f'username={self.__username},\n'
             f'user_id={self.__user_id},\n'
-            f'''user_lists={ f'{nl}'.join([f'({key}, {str(len(self.__user_lists[key]))})' for key in self.__user_lists.keys()]) })'''
+            f"""user_lists={ f'{nl}'.join([f'({key}, {str(len(self.__user_lists[key]))})' for key in self.__user_lists.keys()]) })"""
         )
 
     def __str__(self):

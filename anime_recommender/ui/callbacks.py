@@ -1,74 +1,122 @@
-import tracemalloc  # isort:skip
 import dash_bootstrap_components as dbc
-import numpy as np
-import plotly.graph_objects as go
-from dash import Dash, Input, Output, State, ctx, dcc, html
+from dash import Input, Output, State, ctx, no_update
 from dash.dependencies import ClientsideFunction
-from dash.exceptions import PreventUpdate
-from sklearn.preprocessing import MinMaxScaler, minmax_scale
 
-from . import IdHolder
+from .callback_utils import (
+    get_recommendations,
+    plot_scaled_unscaled_scores_diff,
+    update_app_data,
+)
 from .layout import (
-    ITEMS_ENG,
-    ITEMS_NATIVE,
-    ITEMS_ROMAJI,
     RESULT_AMOUNT,
     alert_features,
     app,
     app_data,
+    by_popularity,
+    card,
     feature_options,
+    modal_body,
+    option_template,
+    user_lists,
 )
-from .utils import dispatcher
+from .utils.dcw import callback
+from .utils.dcw import callback_manager as cm
+from .utils.IdHolder import IdHolder as ID
 
 app.clientside_callback(
     ClientsideFunction(
         namespace='clientside',
         function_name='resizeOnPageLoad',
     ),
-    Output(IdHolder.hidden.name, 'children'),
-    Input(IdHolder.hidden.name, 'children'),
+    Output(ID.hidden, 'children'),
+    Input(ID.hidden, 'children'),
 )
 
 
-@app.callback(
+@callback(
     [
-        Output(IdHolder.username_searchbar_container.name, 'style'),
-        Output(IdHolder.item_searchbar_container.name, 'style'),
-        Output(IdHolder.search_type_switch.name, 'label'),
-        Output(IdHolder.score_container.name, 'style'),
+        Output(ID.input_group, 'style'),
+        Output(ID.source, 'toggle_style'),
+        Output(ID.input_group_text, 'style'),
+        Output(ID.username_searchbar, 'style'),
+        Output(ID.item_searchbar, 'style'),
+        Output(ID.search_type_switch, 'label'),
+        Output(ID.score_container, 'style'),
+        Output(ID.user_lists, 'style'),
+        Output(ID.user_lists, 'children'),
     ],
-    Input(IdHolder.search_type_switch.name, 'value'),
-    prevent_initial_call=True,
+    [
+        Input(ID.search_type_switch, 'value'),
+        Input(ID.trigger_switch_update, 'n_clicks'),
+    ],
 )
-def change_search_type(value):
-    return (
-        [{'display': 'none'}, {'display': 'block'}, 'By title', {'display': 'none'}]
-        if value
-        else [
-            {'display': 'block'},
-            {'display': 'none'},
-            'By username',
-            {'display': 'block'},
-        ]
+def change_search_type():
+    """Changes search type between username and titles"""
+
+    input_group_style = (
+        {'grid-template-columns': '1fr max-content'}
+        if cm.search_type_switch.value
+        else {'grid-template-columns': 'max-content max-content 1fr max-content'}
     )
 
+    is_username_searchbar_active_and_valid = (
+        not cm.search_type_switch.value and app_data.client and app_data.client.user_id
+    )
 
-@app.callback(
+    user_lists_style = {'display': 'block'} if is_username_searchbar_active_and_valid else {'display': 'none'}
+
+    user_lists_children = (
+        user_lists(
+            [{'label': i, 'value': i} for i in list(app_data.client.user_lists.keys())],
+        )
+        if is_username_searchbar_active_and_valid
+        else no_update
+    )
+
+    username_source_style = {'display': 'none'} if cm.search_type_switch.value else {'display': 'block'}
+
+    username_input_group_style = {'display': 'none'} if cm.search_type_switch.value else {'display': 'block'}
+
+    username_searchbar_style = (
+        {'display': 'none'} if cm.search_type_switch.value else {'display': 'block', 'width': '100%'}
+    )
+
+    item_searchbar_style = {'display': 'table'} if cm.search_type_switch.value else {'display': 'none'}
+
+    score_container_style = {'display': 'none'} if cm.search_type_switch.value else {'display': 'block'}
+
+    switch_label = 'By title' if cm.search_type_switch.value else 'By username'
+
+    return [
+        input_group_style,
+        username_source_style,
+        username_input_group_style,
+        username_searchbar_style,
+        item_searchbar_style,
+        switch_label,
+        score_container_style,
+        user_lists_style,
+        user_lists_children,
+    ]
+
+
+@callback(
     [
-        Output(IdHolder.features_list.name, 'options'),
-        Output(IdHolder.features_alert.name, 'children'),
+        Output(ID.features_list, 'options'),
+        Output(ID.features_alert, 'children'),
     ],
-    Input(IdHolder.features_list.name, 'value'),
+    Input(ID.features_list, 'value'),
     prevent_initial_call=True,
 )
-def update_features_list(value):
+def update_features_list():
+    """Prevents user from selecting less than 1 feature"""
     options = feature_options
-    if len(value) == 1:
+    if len(cm.features_list.value) == 1:
         options = [
             {
                 'label': option['label'],
                 'value': option['value'],
-                'disabled': option['value'] in value,
+                'disabled': option['value'] in cm.features_list.value,
             }
             for option in options
         ]
@@ -83,24 +131,25 @@ def update_features_list(value):
             for option in options
         ]
 
-    return [options, alert_features if len(value) == 1 else None]
+    return [options, alert_features if len(cm.features_list.value) == 1 else None]
 
 
-@app.callback(
+@callback(
     [
-        Output(IdHolder.included_list.name, 'options'),
-        Output(IdHolder.excluded_list.name, 'options'),
+        Output(ID.included_list, 'options'),
+        Output(ID.excluded_list, 'options'),
     ],
     [
-        Input(IdHolder.included_list.name, 'value'),
-        Input(IdHolder.excluded_list.name, 'value'),
+        Input(ID.included_list, 'value'),
+        Input(ID.excluded_list, 'value'),
     ],
     [
-        State(IdHolder.included_list.name, 'options'),
-        State(IdHolder.excluded_list.name, 'options'),
+        State(ID.included_list, 'options'),
+        State(ID.excluded_list, 'options'),
     ],
 )
 def user_lists_mutual_exclusion(included, excluded, included_list, excluded_list):
+    """Prevents user from selecting same list in both included and excluded lists"""
     excluded_list = [
         {'label': i['label'], 'value': i['value'], 'disabled': False}
         if i['value'] not in included
@@ -118,279 +167,168 @@ def user_lists_mutual_exclusion(included, excluded, included_list, excluded_list
     return included_list, excluded_list
 
 
-@app.callback(
-    Output(IdHolder.scaled_container.name, 'style'),
-    Input(IdHolder.is_weighted.name, 'value'),
+@callback(
+    Output(ID.scaled_container, 'style'),
+    Input(ID.is_weighted, 'value'),
     prevent_initial_call=True,
 )
-def update_scaled(value):
-    return {'display': 'block'} if value else {'display': 'none'}
+def update_scaled():
+    """Shows or hides option to use user scores for recommendation depending on whether checkbox with ID `is_weighted` is checked or not"""
+    return {'display': 'block'} if cm.is_weighted.value else {'display': 'none'}
 
 
-@app.callback(
-    Output(IdHolder.graph_container.name, 'style'),
+@callback(
+    Output(ID.graph_container, 'style'),
     [
-        Input(IdHolder.is_scaled.name, 'value'),
-        Input(IdHolder.is_weighted.name, 'value'),
+        Input(ID.is_scaled, 'value'),
+        Input(ID.is_weighted, 'value'),
     ],
     prevent_initial_call=True,
 )
-def update_scaled_container(v1, v2):
-    return {'display': 'block'} if v1 and v2 else {'display': 'none'}
+def update_scaled_container():
+    """Shows or hides option to scale scores depending on whether checkbox with ID `is_scaled` is checked or not"""
+    return {'display': 'block'} if cm.is_scaled.value and cm.is_weighted.value else {'display': 'none'}
 
 
-@app.callback(
+@callback(
     [
-        Output(IdHolder.graph.name, 'figure'),
-        Output(IdHolder.scale_slider.name, 'value'),
-        Output(IdHolder.score_description.name, 'children'),
+        Output(ID.graph, 'figure'),
+        Output(ID.scale_slider, 'value'),
+        Output(ID.score_description, 'children'),
     ],
     [
-        Input(IdHolder.scale_slider.name, 'value'),
-        Input(IdHolder.reset_graph_button.name, 'n_clicks'),
+        Input(ID.scale_slider, 'value'),
+        Input(ID.reset_graph_button, 'n_clicks'),
     ],
 )
-def update_scaled_graph(value, btn):
-    normal_scores = np.array(
-        [i for i in minmax_scale(np.arange(1, 11), feature_range=(1, 10))],
-    )
-    index = np.arange(1, 11)
-    value = [-5, 4] if ctx.triggered_id == 'button' else value
-
-    mm = MinMaxScaler(feature_range=(value[0], value[1]))
-    mm.fit(np.arange(1, 11).reshape(-1, 1))
-
-    scaled_scores = minmax_scale(
-        np.array(
-            [1 / (1 + np.exp(-i)) for i in mm.transform(np.arange(1, 11).reshape(-1, 1))],
-        ).flatten(),
-        feature_range=(1, 10),
-    )
-
-    where = np.argwhere(scaled_scores[1:-1] >= normal_scores[1:-1])
-    val = normal_scores[where[0]][0] if where.shape[0] > 0 else 10
-
-    lower = (
-        [
-            html.Br(),
-            'All titles with scores ',
-            html.B(f'below {val + 1 if val != 10 else val}'),
-            ' will have ',
-            html.B('less'),
-            ' impact.',
-        ]
-        if val != 1
-        else ['']
-    )
-
-    higher = (
-        [
-            'All titles with scores ',
-            html.B(f'higher than {val}'),
-            ' will have ',
-            html.B(f'more'),
-            ' impact.',
-        ]
-        if val != 10
-        else ['']
-    )
-
-    fig = go.Figure()
-
-    fig.add_trace(go.Scatter(x=index, y=scaled_scores, name='<b>Scaled Scores</b>'))
-    fig.add_trace(go.Scatter(x=index, y=normal_scores, name='<b>Normal Scores</b>'))
-
-    fig.update_layout(
-        title='',
-        title_x=0.5,
-        title_y=0.93,
-        title_font_size=10,
-        xaxis_title='Score',
-        yaxis_title='Coefficient',
-        hovermode='x unified',
-        legend=dict(
-            yanchor='top',
-            y=-0.05,
-            xanchor='left',
-            x=0,
-            bgcolor='rgba(0,0,0,0)',
-            orientation='h',
-        ),
-        margin=dict(l=0, r=0, t=20, b=0),
-        dragmode=False,
-    )
-
-    fig.update_xaxes(title='', ticklabelposition='inside')
-    fig.update_yaxes(ticklabelposition='inside top', title=None)
-
-    fig.add_annotation(
-        x=0.5,
-        y=-0.05,
-        xref='paper',
-        yref='paper',
-        showarrow=False,
-        text='<b>Score<b>',
-        font=dict(size=14),
-    )
-
-    return [fig, value, html.P(higher + lower)]
+def update_scaled_graph():
+    """Updates graph showing difference between scaled and unscaled scores"""
+    return plot_scaled_unscaled_scores_diff()
 
 
-@app.callback(
-    Output(IdHolder.info_container.name, 'is_open'),
-    Input(IdHolder.info_button.name, 'n_clicks'),
-    State(IdHolder.info_container.name, 'is_open'),
+@callback(
+    Output(ID.info_container, 'is_open'),
+    Input(ID.info_button, 'n_clicks'),
+    State(ID.info_container, 'is_open'),
     prevent_initial_call=True,
 )
 def update_info_toast(n, is_open):
+    """Shows or hides info toast"""
     if n and not is_open:
         return True
     return False
 
 
-@app.callback(
+@callback(
     [
-        Output(IdHolder.titles_language_titles.name, 'label'),
-        Output(IdHolder.titles_language_username.name, 'label'),
+        Output(ID.titles_language, 'label'),
+        Output(ID.output_container, 'children', allow_duplicate=True),
     ],
     [
-        Input(i, 'n_clicks')
-        for i in [
-            IdHolder.english.name,
-            IdHolder.romaji.name,
-            IdHolder.native.name,
-        ]
-    ]
-    + [
-        Input(i, 'n_clicks')
-        for i in [
-            IdHolder.english_username.name,
-            IdHolder.romaji_username.name,
-            IdHolder.native_username.name,
-        ]
+        Input(ID.english, 'n_clicks'),
+        Input(ID.romaji, 'n_clicks'),
+        Input(ID.native, 'n_clicks'),
     ],
+    State(ID.output_container, 'children'),
     prevent_initial_call=True,
 )
-def mutual_update_dropdown_language(*args):
-    if not ctx.triggered:
-        return [IdHolder.english.name, IdHolder.english.name]
-    else:
-        return [
-            ctx.triggered[0]['prop_id'].split('.')[0].split('_')[0],
-            ctx.triggered[0]['prop_id'].split('.')[0].split('_')[0],
-        ]
+def update_titles_language():
+    """Updates titles language"""
+    app_data.language = ctx.triggered[0]['prop_id'].split('.')[0]
 
-
-@app.callback(
-    Output(IdHolder.item_searchbar.name, 'options'),
-    [
-        Input(IdHolder.titles_language_titles.name, 'label'),
-        Input(IdHolder.item_searchbar.name, 'search_value'),
-        Input(IdHolder.item_searchbar.name, 'value'),
-    ],
-    prevent_initial_call=True,
-)
-def update_items_dropdown(language, search_value, chosen_values):
-
-    if language == 'english':
-        items = ITEMS_ENG
-    elif language == 'romaji':
-        items = ITEMS_ROMAJI
-    elif language == 'native':
-        items = ITEMS_NATIVE
-
-    chosen_items = [i for i in items if i['value'] in chosen_values] if chosen_values else []
-    items_return = []
-
-    if not search_value:
-        if ctx.triggered_id == 'titles_language_titles' or ctx.triggered[0]['prop_id'] == 'item_searchbar.value':
-            for i in items:
-                if i['value'] not in (chosen_values or []):
-                    items_return.append(i)
-                if len(items_return) >= RESULT_AMOUNT:
-                    return items_return + chosen_items
-
-        raise PreventUpdate
-
-    for i in items:
-        if (
-            search_value.lower() in i['label'].children[1].children[0].children.lower()
-            or search_value.lower() in i['search']
-        ) and i['value'] not in (chosen_values or []):
-            items_return.append(i)
-        if len(items_return) >= RESULT_AMOUNT:
-            return items_return + chosen_items
-
-    return items_return + chosen_items
-
-
-@app.callback(
-    [
-        Output(IdHolder.output_container.name, 'children'),
-        Output(IdHolder.modal_notification.name, 'is_open'),
-        Output(IdHolder.modal_notification.name, 'children'),
-        Output(IdHolder.user_lists.name, 'style'),
-        Output(IdHolder.user_lists.name, 'children'),
-        Output(IdHolder.is_weighted.name, 'value'),
-    ],
-    [
-        Input(IdHolder.generate_button.name, 'n_clicks'),
-        Input(IdHolder.apply_button.name, 'n_clicks'),
-        Input(IdHolder.close_button.name, 'n_clicks'),
-        Input(IdHolder.search_type_switch.name, 'value'),
-    ],
-    [
-        State(IdHolder.output_container.name, 'children'),
-        State(IdHolder.username_searchbar.name, 'value'),
-        State(IdHolder.recommender_type.name, 'value'),
-        State(IdHolder.modal_notification.name, 'is_open'),
-        State(IdHolder.features_list.name, 'value'),
-        State(IdHolder.is_weighted.name, 'value'),
-        State(IdHolder.is_scaled.name, 'value'),
-        State(IdHolder.scale_slider.name, 'value'),
-        State(IdHolder.included_list.name, 'value'),
-        State(IdHolder.excluded_list.name, 'value'),
-        State(IdHolder.user_lists.name, 'style'),
-        State(IdHolder.user_lists.name, 'children'),
-        State(IdHolder.item_searchbar.name, 'value'),
-        State(IdHolder.titles_language_titles.name, 'label'),
-    ],
-    prevent_initial_call=True,
-)
-def dispatch(
-    _,
-    _1,
-    _2,
-    type_switch,
-    output_content,
-    username,
-    recommender_type,
-    is_open,
-    columns,
-    is_weighted,
-    scaled,
-    scale_slider,
-    included,
-    excluded,
-    style,
-    columns_container,
-    item_values,
-    language,
-):
-    return dispatcher(
-        type_switch,
-        output_content,
-        username,
-        recommender_type,
-        is_open,
-        columns,
-        is_weighted,
-        scaled,
-        scale_slider,
-        included,
-        excluded,
-        style,
-        columns_container,
-        item_values,
-        language,
+    output = (
+        dbc.Row(
+            app_data.df.iloc[:20].apply(card, axis=1).tolist(),
+            justify='evenly',
+            align='center',
+            className='mt-5',
+        )
+        if cm.output_container.children
+        and cm.output_container.children['props']['children'][0]['props']['children']
+        and app_data.df is not None
+        else no_update
     )
+    return app_data.language, output
+
+
+@callback(
+    Output(ID.item_searchbar, 'options'),
+    [
+        Input(ID.titles_language, 'label'),
+        Input(ID.item_searchbar, 'search_value'),
+        Input(ID.item_searchbar, 'value'),
+    ],
+)
+def update_items_dropdown(language, search_value, selected_indexes):
+    """Updates dropdown with titles based on searchbar value and language"""
+    chosen_items = option_template(selected_indexes, language) if selected_indexes else []
+    items_return = []
+    is_searchbar_empty = not search_value
+    selected_indexes = selected_indexes or []
+
+    if is_searchbar_empty:
+        items_return = by_popularity.query('id not in @selected_indexes').head(RESULT_AMOUNT).id.tolist()
+        return option_template(items_return, language) + chosen_items
+
+    for row in by_popularity.query('id not in @selected_indexes').itertuples():
+        if search_value.lower() in row.english.lower():
+            items_return.append(row.id)
+
+        if len(items_return) >= RESULT_AMOUNT:
+            return option_template(items_return, language) + chosen_items
+
+    return option_template(items_return, language) + chosen_items
+
+
+@callback(
+    [
+        Output(ID.output_container, 'children', allow_duplicate=True),
+        Output(ID.trigger_modal_update, 'n_clicks'),
+        Output(ID.trigger_switch_update, 'n_clicks'),
+    ],
+    [
+        Input(ID.generate_button, 'n_clicks'),
+        Input(ID.apply_button, 'n_clicks'),
+    ],
+    [
+        State(ID.search_type_switch, 'value'),
+        State(ID.output_container, 'children'),
+        State(ID.username_searchbar, 'value'),
+        State(ID.item_searchbar, 'value'),
+        State(ID.recommender_type, 'value'),
+        State(ID.modal_notification, 'is_open'),
+        State(ID.features_list, 'value'),
+        State(ID.is_weighted, 'value'),
+        State(ID.is_scaled, 'value'),
+        State(ID.scale_slider, 'value'),
+        State(ID.included_list, 'value'),
+        State(ID.excluded_list, 'value'),
+        State(ID.user_lists, 'style'),
+        State(ID.user_lists, 'children'),
+        State(ID.titles_language, 'label'),
+    ],
+    prevent_initial_call=True,
+)
+def update_output():
+    """Updates output container with recommendations"""
+    update_app_data()
+    return get_recommendations()
+
+
+@callback(
+    [
+        Output(ID.modal_notification, 'is_open'),
+        Output(ID.modal_notification, 'children'),
+    ],
+    [
+        Input(ID.trigger_modal_update, 'n_clicks'),
+        Input(ID.close_button, 'n_clicks'),
+    ],
+    prevent_initial_call=True,
+)
+def update_modal():
+    """Shows modal with error message if search field is empty after `update_output` callback is triggered"""
+    if ctx.triggered_id == ID.trigger_modal_update:
+        return True, modal_body('Empty', 'Search field is empty')
+
+    return False, modal_body('', '')
