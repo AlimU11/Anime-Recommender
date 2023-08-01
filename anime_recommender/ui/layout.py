@@ -149,6 +149,22 @@ def card(s):
                                 },
                                 className='card-image-large',
                             ),
+                            html.Div(
+                                [
+                                    html.Span(
+                                        f'{s.meanScore*10:.1f}{"" if s.meanScore else "N/A"}',
+                                        style={'margin-right': '0.25rem'},
+                                    ),
+                                    html.I(
+                                        className='bi bi-star-fill',
+                                    ),
+                                ],
+                                style={
+                                    'background-color': f'{s.color if s.color else "white"}',
+                                    'color': f"""{'white' if s.color else 'black'}""",
+                                },
+                                className='card-rating-container',
+                            ),
                         ],
                         className='card-image-container',
                     ),
@@ -165,6 +181,19 @@ def card(s):
                                     id=f"""tooltip-title-{s['id']}""",
                                     className='card-title',
                                 ),
+                                style={
+                                    'margin': '0',
+                                    'display': 'inline-block',
+                                },
+                            ),
+                            html.P(
+                                f"""{int(s.startDate_year)} {s.format}""",
+                                style={
+                                    'margin': '0',
+                                    'color': f"""{s.color if s.color else 'black'}""",
+                                    'font-size': '0.8rem',
+                                    'margin-top': '-0.25rem',
+                                },
                             ),
                             html.P(
                                 f'{s.description}',

@@ -20,13 +20,19 @@ class AppData:
 
     __recommender : IRecommender, optional
 
-    __last_triggered_on_dispatch : str | dict, optional
-
     __search_type_switch : bool
 
-    __similarity_method : str, optional
+    __output_container : Sequence[Component]
 
-    __columns : list[str]
+    __username_searchbar : str, optional
+
+    __item_searchbar : list[str]
+
+    __recommender_type : str, optional
+
+    __modal_notification : bool
+
+    __features_list : list[str]
 
     __included_lists : list[str]
 
@@ -34,11 +40,15 @@ class AppData:
 
     __is_weighted : bool
 
-    __scaled : bool
+    __is_scaled : bool
 
-    __scale_range : list[float]
+    __scale_slider : list[float], optional
 
-    __input_values : list[str]
+    __user_lists_style : dict
+
+    __user_lists : list
+
+    __language : str
 
     __df : DataFrame
 
@@ -50,7 +60,6 @@ class AppData:
         self.__storage: IStorage | None = None
         self.__recommender: IRecommender | None = None
 
-        self.__last_triggered_on_dispatch: str | dict | None = None
         self.__search_type_switch: bool = False
         self.__output_container: Sequence[Component] | None = None
 
@@ -100,15 +109,6 @@ class AppData:
     @recommender.setter
     def recommender(self, recommender: IRecommender):
         self.__recommender = recommender
-
-    @property
-    def last_triggered_on_dispatch(self) -> str | dict | None:
-        """ID of last triggered component on `dispatch` callback (`str | dict`, optional)."""
-        return self.__last_triggered_on_dispatch
-
-    @last_triggered_on_dispatch.setter
-    def last_triggered_on_dispatch(self, trigger_id: str | dict):
-        self.__last_triggered_on_dispatch = trigger_id
 
     @property
     def search_type_switch(self) -> bool:
