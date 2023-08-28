@@ -13,37 +13,37 @@
 #               Moreover, it was found that the result difference leads to swapping of individual pairs of
 #               titles in some rare cases, which slightly affects the final result. However, this behaviour
 #               considered as acceptable approximation.
-CHUNK_SIZE: 100
+chunk_size: 100
 
 # DATA_PATH - specifies the path to the data file
-DATA_PATH:  data/anilist.pickle
+data_path:  data/anilist.pickle
 
 # METADATA_PATH - specifies the path to the metadata file
-METADATA_PATH: data/anilist_meta.pickle
+metadata_path: data/anilist_meta.pickle
 
 # INFO_PATH - specifies the path to the info file
-INFO_PATH: data/anilist_info.pickle
+info_path: data/anilist_info.pickle
 
 # DATA_STAGED_PATH - specifies the path to the staged data file
-DATA_STAGED_PATH: data/anilist_staged.pickle
+data_staged_path: data/anilist_staged.pickle
 
 # METADATA_STAGED_PATH - specifies the path to the metadata file for staged data
-METADATA_STAGED_PATH: data/anilist_meta_staged.pickle
+metadata_staged_path: data/anilist_meta_staged.pickle
 
 # DATA_PROCESSED_PATH - specifies the path to the processed data file
-DATA_PROCESSED_PATH: data/anilist_processed.pickle
+data_processed_path: data/anilist_processed.pickle
 
 # MAX_PER_PAGE - specifies the maximum number of records to be returned per page
-MAX_PER_PAGE: 50
+pagination_size: 50
 
 # API_URL - specifies the url of the API
-API_URL: https://graphql.anilist.co
+api_url: https://graphql.anilist.co
 
 # API_PERIOD - specifies the period of time in seconds for which the `API_LIMIT` specified
-API_PERIOD: 60
+api_period: 60
 
 # API_LIMIT - specifies the maximum number of requests per period
-API_LIMIT: 90
+api_limit: 90
 
-# RESULT_AMOUNT - specifies the number of results in items dropdown search to be returned
-RESULT_AMOUNT: 8
+# DROPDOWN_ITEM_COUNT - specifies the number of results in items dropdown search to be returned
+dropdown_item_count: 8

@@ -1,10 +1,11 @@
 import gzip
-import os
 import pickle
 from typing import Callable, Optional, final
 
 import pandas as pd
 from pandas import DataFrame
+
+from anime_recommender.config import config
 
 from . import IStorage
 
@@ -98,16 +99,9 @@ class LocalStorage(IStorage):
             raise TypeError(f'{cls.__base__.__name__} class cannot be subclassed.')
 
     def __init__(self):
-        self.__data_path: str = os.environ.get('DATA_PATH')
-        self.__metadata_path: str = os.environ.get('METADATA_PATH')
-        self.__info_path: str = os.environ.get('INFO_PATH')
-        self.__data: DataFrame = LocalStorage.__format[self.__data_path.split('.')[-1]](
-            self.__data_path,
-        )
-        self.__metadata: DataFrame = LocalStorage.__format[self.__metadata_path.split('.')[-1]](self.__metadata_path)
-        self.__info: DataFrame = LocalStorage.__format[self.__info_path.split('.')[-1]](
-            self.__info_path,
-        )
+        self.__data: DataFrame = LocalStorage.__format[config.data_path.split('.')[-1]](config.data_path)
+        self.__metadata: DataFrame = LocalStorage.__format[config.metadata_path.split('.')[-1]](config.metadata_path)
+        self.__info: DataFrame = LocalStorage.__format[config.info_path.split('.')[-1]](config.info_path)
         self.__mapping: dict[int, int] = {
             key: value for value, key in self.__data.reset_index().iloc[:, :2].values.tolist()
         }
@@ -117,10 +111,8 @@ class LocalStorage(IStorage):
         return ''.join(
             [
                 f'LocalStorage(\n',
-                f'data_path={self.__data_path},\n',
-                f'metadata_path={self.__metadata_path},\n',
-                f'DATA_SHAPE={self.__data.shape},\n',
-                f'METADATA_SHAPE={self.__metadata.shape})',
+                f'  DATA_SHAPE={self.__data.shape},\n',
+                f'  METADATA_SHAPE={self.__metadata.shape})',
             ],
         )
 

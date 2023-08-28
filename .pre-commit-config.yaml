@@ -3,8 +3,8 @@ default_stages: [commit]
 default_language_version:
   python: python3.10
 
-ci:
-    skip: [autoflake]
+# ci:
+#     skip: [autoflake]
 
 repos:
 
@@ -19,49 +19,45 @@ repos:
       - id: double-quote-string-fixer
       - id: requirements-txt-fixer
 
-#  - repo: https://github.com/codespell-project/codespell
-#    rev: v2.2.1
-#    hooks:
-#      - id: codespell
-
-  - repo: https://github.com/pycqa/isort
-    rev: 5.12.0
+  - repo: local
     hooks:
-      - id: isort
-        args: [
-          --profile,
-          black,
-          --filter-files
+    - id: autoflake
+      name: autoflake
+      entry: autoflake
+      language: python
+      "types": [ python ]
+      require_serial: true
+      args: [
+          --in-place,
+          --expand-star-imports,
+          --remove-duplicate-keys,
+          --remove-unused-variables,
         ]
-        name: isort (python)
 
-  - repo: https://github.com/PyCQA/autoflake
-    rev: v2.2.0
-    hooks:
-      - id: autoflake
-        name: autoflake
-        entry: autoflake
-        language: python
-        "types": [ python ]
-        require_serial: true
-        args: [
-            --in-place,
-            --expand-star-imports,
-            --remove-duplicate-keys,
-            --remove-unused-variables,
-          ]
+    - id: isort
+      entry: isort
+      language: python
+      args: [
+        --profile,
+        black,
+        --filter-files,
+        --skip-gitignore,
+        --line-length,
+        '120',
+        'anime_recommender/'
+      ]
+      name: isort
 
-  - repo: https://github.com/asottile/add-trailing-comma
-    rev: v2.5.1
-    hooks:
-      - id: add-trailing-comma
-        args:
-          - --py36-plus
+    - id: add-trailing-comma
+      name: add-trailing-comma
+      entry: add-trailing-comma
+      language: python
+      types: ['python']
 
-  - repo: https://github.com/psf/black
-    rev: 23.3.0
-    hooks:
     - id: black
+      name: black
+      entry: black
+      language: python
       args: [
         --skip-string-normalization,
         --line-length=120,
@@ -70,27 +66,21 @@ repos:
       exclude: ^(venv/|docs/)
       types: ['python']
 
-  - repo: https://github.com/myint/unify
-    rev: v0.5
-    hooks:
-      - id: unify
-        args: [
-          --in-place,
-          --recursive,
-        ]
-        exclude: ^(venv/|docs/)
-        types: [ 'python' ]
+    - id: unify
+      name: unify
+      entry: unify
+      language: python
+      args: [
+        --in-place,
+        --recursive,
+      ]
+      exclude: ^(venv/|docs/)
+      types: [ 'python' ]
 
- # - repo: https://github.com/PyCQA/flake8
- #   rev: 5.0.4
- #   hooks:
- #     - id: flake8
- #       args: [
- #         --max-line-length=140
- #       ]
- #       exclude: ^(venv/|docs/)
- #       types: [ 'python' ]
-
-  # pyment anime_recommender/ --output numpydoc -w
-  # pre-commit run --all-files
-  # pre-commit install
+    # - id: flake8
+    #   name: flake8
+    #   description: wemake-python-styleguide enforcement
+    #   entry: flake8
+    #   args: ["--config=setup.cfg"]
+    #   language: python
+    #   types: [python]

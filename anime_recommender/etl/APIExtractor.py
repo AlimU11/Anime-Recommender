@@ -48,7 +48,7 @@ class APIExtractor(IExtractor):
     __API_PERIOD: Final[int] = int(os.environ.get('API_PERIOD'))
     __API_LIMIT: Final[int] = int(os.environ.get('API_LIMIT'))
 
-    def __init__(self) -> None:
+    def __init__(self):
         self.__metadata_path: str = os.environ.get('METADATA_STAGED_PATH')
         self.__max_per_page: int = int(os.environ.get('MAX_PER_PAGE'))
         self.__data_path: str = os.environ.get('DATA_STAGED_PATH')
@@ -91,7 +91,7 @@ class APIExtractor(IExtractor):
     def __str__(self):
         return self.__repr__()
 
-    def extract_pipe(self) -> None:
+    def extract_pipe(self):
         logger.info('Processing data...')
 
         self.__extract()
@@ -99,7 +99,7 @@ class APIExtractor(IExtractor):
 
         logger.info('Done.')
 
-    def __stage(self) -> None:
+    def __stage(self):
         """Stage data and metadata to files."""
         logger.info('Staging data...')
 
@@ -108,7 +108,7 @@ class APIExtractor(IExtractor):
 
         logger.info('Done.')
 
-    def __extract(self) -> None:
+    def __extract(self):
         """Extract data from AniList API."""
         logger.info('Extracting data...')
 

@@ -1,10 +1,38 @@
+"""
+Module for centralized management of unique component IDs in a dashboard.
+
+This module provides the `IdHolder` enumeration, which contains string constants
+generated using the auto() method. These constants are used as unique IDs for various
+Dash components, ensuring a consistent and organized method of referencing components
+across the application.
+
+This approach aids in preventing potential ID clashes and provides a single source of truth
+for component ID naming.
+
+Classes
+-------
+IdHolder : StrEnum
+    An enumeration derived from `StrEnum` that holds unique IDs for various Dash
+    components such as modals, buttons, dropdowns, inputs, and more.
+
+Notes
+-----
+Using a centralized enum for IDs like this helps in ensuring consistency, especially in
+larger projects where multiple developers might be working on different parts of the
+Dash callbacks.
+
+Author
+------
+AlimU
+"""
+
 from enum import auto
 
-from .StrEnum import StrEnum
+from anime_recommender.ui.ui_utils.str_enum import StrEnum
 
 
 class IdHolder(StrEnum):
-    """ID holder for dash components"""
+    """ID holder for dash components."""
 
     trigger_modal_update = auto()
     trigger_switch_update = auto()
@@ -34,7 +62,7 @@ class IdHolder(StrEnum):
     romaji = auto()
     native = auto()
 
-    Anilist = auto()
+    anilist = auto()
 
     # output
     output_container = auto()

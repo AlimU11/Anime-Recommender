@@ -3,7 +3,7 @@ import pickle
 from typing import Any
 
 
-def stage_file(obj: Any, path: str) -> None:
+def stage_file(obj: Any, path: str):
     """Stage object to file.
 
     Stage object with pickle to file using corresponding path. Before that, checks if path exists and if it does, rename

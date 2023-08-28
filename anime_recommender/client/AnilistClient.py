@@ -23,25 +23,19 @@ class AnilistClient(IClient):
         if cls is not AnilistClient:
             raise TypeError(f'{cls.__base__.__name__} class cannot be subclassed.')
 
-    def __init__(self, username: str):
-        self.__username: str = username
-        self.__user_id: Optional[int] = self.get_user_id()
-        self.__user_lists: Optional[dict] = self.get_user_lists()
-        self.__unique_scores: Optional[list[tuple[int, int]]] = (
-            list(
-                set(tuple(i) for j in self.__user_lists.values() for i in j),
-            )
-            if self.__user_id
-            else None
-        )
+    def __init__(self):
+        self._username: str | None = None
+        self._user_id: int | None = None
+        self._user_lists: dict | None = None
+        self._unique_scores: list[tuple[int, int]] | None = None
 
     def __repr__(self):
         nl = '\n'
         return (
             f'Client(\n'
-            f'username={self.__username},\n'
-            f'user_id={self.__user_id},\n'
-            f"""user_lists={ f'{nl}'.join([f'({key}, {str(len(self.__user_lists[key]))})' for key in self.__user_lists.keys()]) })"""
+            f'  username={self._username},\n'
+            f'  user_id={self._user_id},\n'
+            f"""  user_lists={ f'{nl}'.join([f'({key}, {str(len(self._user_lists[key]))})' for key in self._user_lists.keys()]) })"""
         )
 
     def __str__(self):
@@ -55,30 +49,43 @@ class AnilistClient(IClient):
     @property
     def username(self) -> str:
         """Anilist user's username (`str`, read-only)."""
-        return self.__username
+        return self._username
+
+    @username.setter
+    def username(self, username: str):
+        self._username = username
+        self._user_id = self.get_user_id()
+        self._user_lists = self.get_user_lists()
+        self._unique_scores = (
+            list(
+                set(tuple(i) for j in self._user_lists.values() for i in j),
+            )
+            if self._user_id
+            else None
+        )
 
     @property
     def user_id(self) -> Optional[int]:
         """Anilist user's ID (`int`, optional, read-only)."""
-        return self.__user_id
+        return self._user_id
 
     @property
     def user_lists(self) -> Optional[dict]:
         """Anilist user's lists (`dict`, optional, read-only)."""
-        return self.__user_lists
+        return self._user_lists
 
     @property
     def unique_scores(self) -> list[tuple[int, int]]:
         """Anilist user's unique scores (`list[tuple[int, int]]`, read-only)."""
-        return self.__unique_scores
+        return self._unique_scores
 
     def indexes(self, user_lists: list[str]) -> list[int]:
         return [
             k[0]
-            for k in self.__unique_scores
+            for k in self._unique_scores
             if k[0]
             in set(
-                [i[0] for j in self.__user_lists.keys() for i in self.__user_lists[j] if j in user_lists],
+                [i[0] for j in self._user_lists.keys() for i in self._user_lists[j] if j in user_lists],
             )
         ]
 
@@ -88,27 +95,27 @@ class AnilistClient(IClient):
             # else 0  # FIXME: values without scores have 0 score. Replace with appropriate values for missing ones
             #               or make this method private and introduce wrapper to check for missing scores
             #               (i.e. `scores()` + `__scores()`).
-            for k in self.__unique_scores
+            for k in self._unique_scores
             if k[0]
             in set(
-                [i[0] for j in self.__user_lists.keys() for i in self.__user_lists[j] if j in user_lists],
+                [i[0] for j in self._user_lists.keys() for i in self._user_lists[j] if j in user_lists],
             )
         ]
 
     def get_user_id(self) -> Optional[str]:
         response = requests.post(
             AnilistClient.__url,
-            json={'query': id_query, 'variables': {'name': self.__username}},
+            json={'query': id_query, 'variables': {'name': self._username}},
         ).json()['data']['User']
         return response if response is None else response['id']
 
     def get_user_lists(self) -> Optional[dict]:
-        if self.__user_id is None:
+        if self._user_id is None:
             return None
 
         response = requests.post(
             AnilistClient.__url,
-            json={'query': lists_query, 'variables': {'id': self.__user_id}},
+            json={'query': lists_query, 'variables': {'id': self._user_id}},
         ).json()['data']['MediaListCollection']['lists']
 
         if response is None:

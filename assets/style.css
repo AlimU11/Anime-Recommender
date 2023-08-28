@@ -77,6 +77,21 @@ body::-webkit-scrollbar-thumb {
     background-color: #555;
 }
 
+.main-card {
+    height: 100vh;
+    margin-left: 5vw;
+    margin-right: 0;
+    border: none;
+}
+
+#trigger_modal_update {
+    display: none;
+}
+
+#trigger_switch_update {
+    display: none;
+}
+
 .content-card p::-webkit-scrollbar-track {
     background-color: #FFFFFF;
 }
@@ -129,10 +144,13 @@ body::-webkit-scrollbar-thumb {
     padding-right: 0;
 }
 
-#reset_graph_button,
-#apply_button {
-    float: right;
+#reset_graph_button {
     margin: 1.5rem auto 0;
+}
+
+#apply_button {
+    margin-top: 1.5rem;
+    float: right;
 }
 
 h5 {
@@ -159,7 +177,15 @@ h5 {
     height: 100%;
 }
 
-.main-column{
+.main-card-body > .row {
+    height: 100%;
+}
+
+.main-column {
+    height: 100%;
+}
+
+.main-column > .card {
     height: 100%;
 }
 
@@ -244,10 +270,10 @@ h5 {
     padding-bottom: 5px !important;
 }
 
-#output_container>.mt-5>.card {
-    margin-left: 0.5rem;
-    margin-right: 0.5rem;
-
+/* #output_container>.carousel-wrapper>.carousel-container>.card { */
+#output_container > .mt-5 > .card {
+    /* margin-left: 0.5rem;
+    margin-right: 0.5rem; */
     width: 16rem;
     height: 20rem;
     margin-bottom: 3rem;
@@ -470,7 +496,38 @@ h5 {
 }
 
 #info_button {
-    position: sticky;
+    position: fixed;
+    bottom: 25px;
+    left: 25px;
+    border-radius: 50%;
+    width: 3rem;
+    height: 3rem;
+    z-index: 1000;
+}
+
+#title_weigted + i {
+    margin: 0.5rem 0;
+    display: inline-block;
+}
+
+#title_rec_engine + p > i {
+    margin-bottom: 1rem;
+}
+
+#toast_desc5 {
+    font-size: 0.8rem;
+}
+
+#info_container {
+    position: fixed;
+    bottom: 5rem;
+    left: 5rem;
+    width: 350px;
+    z-index: 1003;
+}
+
+#info_container > p {
+    margin-bottom: 0;
 }
 
 #item_searchbar_container>ul {
@@ -484,6 +541,12 @@ h5 {
 
 .settings-accordion {
     margin: 0;
+    margin-top: 1.5rem;
+    width: 100%;
+}
+
+.settings-card {
+    height: 100%;
 }
 
 .settings-card>.card-body>.row>h2>div {
@@ -498,6 +561,7 @@ h5 {
 
 .settings-column {
     display: block !important;
+    height: 100%;
 }
 
 /* style moved from layout.py */
@@ -513,8 +577,40 @@ h5 {
     display: block;
 }
 
-.bi.bi-question-circle-fill {
+.bi.bi-arrow-right {
+    margin-left: 0.5rem;
+}
+
+.bi.bi-arrow-right,
+.bi.bi-sliders2,
+.bi-info-lg {
     font-weight: bold;
+}
+
+#recommender_type,
+#features_list,
+#is_weighted,
+#is_scaled {
+    cursor: pointer;
+}
+
+#graph_container {
+    display: none;
+    padding: 0;
+}
+
+.title-mobile + p {
+    margin-bottom: 1rem;
+}
+
+#scaled_desc2 {
+    margin: 0.5rem 0;
+    display: inline-block;
+}
+
+#title_scaled + i {
+    margin-bottom: 1rem;
+    display: inline-block;
 }
 
 .question-mark {
@@ -555,12 +651,50 @@ h5 {
     display: none;
 }
 
-.output-container {
-    height: fit-content;
-}
-
 .search-container {
     min-height: 100px;
+}
+
+.carousel-wrapper {
+    overflow-x: hidden;
+    position: relative;
+}
+
+.carousel-container {
+    /* min-width: calc((100% / 4) - 1rem); */
+    display: grid;
+    grid-auto-flow: column;
+    overflow-x: auto;
+    gap: 1rem;
+    /* min-width: calc((100% / 4) - 1rem); */
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: calc((100% / 4) - 12px);
+    overflow-x: hidden;
+    scroll-snap-type: x mandatory;
+    gap: 16px;
+    border-radius: 8px;
+    scroll-behavior: smooth;
+    scrollbar-width: none;
+    /* height: 50rem; */
+    /* padding: 1rem 3rem 0rem; */
+    height: 26rem;
+    /* bottom: -30px; */
+    /* position: absolute; */
+    /* padding: 1rem 1rem 0; */
+    padding-top: 1rem;
+    padding-left: 1rem;
+}
+
+.spinner {}
+
+.output-container {
+    height: fit-content;
+    padding: 0;
+}
+
+.output-container>div {
+    padding: 0;
 }
 
 @media screen and (max-width: 1600px) {

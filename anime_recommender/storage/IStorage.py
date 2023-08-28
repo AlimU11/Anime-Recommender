@@ -40,6 +40,6 @@ class IStorage(metaclass=ABCMeta):
 
     @property
     @abstractmethod
-    def info(self):
+    def info(self) -> DataFrame:
         """Information about the data mart. Unpacking method is determined by the file extension. Supported extensions are:
         `.csv`, `.gz`, `.pickle` (DataFrame)."""

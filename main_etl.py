@@ -13,7 +13,10 @@ from anime_recommender.etl import APIExtractor, APIProcessor, APITransformer
 
 
 def get_args():
-    parser = argparse.ArgumentParser(description='ETL Arguments', formatter_class=argparse.RawTextHelpFormatter)
+    parser = argparse.ArgumentParser(
+        description='ETL Arguments',
+        formatter_class=argparse.RawTextHelpFormatter,
+    )
 
     parser.add_argument(
         '-e',

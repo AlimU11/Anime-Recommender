@@ -1,6 +1,6 @@
 import re
 
-from . import ITextProcessor
+from anime_recommender.etl.ITextProcessor import ITextProcessor
 
 
 class TextProcessor(ITextProcessor):

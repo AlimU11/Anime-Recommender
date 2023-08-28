@@ -1,1 +1,1 @@
-from .storage import IStorage
+"""Web App UI module."""

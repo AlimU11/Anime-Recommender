@@ -118,12 +118,28 @@ class APITransformer(DataFrame, ITransformer):
         self.__info = pd.concat(
             [
                 self.__info,
-                self[['id', 'description', 'romaji', 'english', 'native', 'extraLarge', 'medium', 'color']],
+                self[
+                    [
+                        'id',
+                        'description',
+                        'romaji',
+                        'english',
+                        'native',
+                        'extraLarge',
+                        'medium',
+                        'color',
+                        'meanScore',
+                    ]
+                ],
             ],
             axis=1,
         )
 
-        self.__info.rename({'extraLarge': 'img_large', 'medium': 'img_small'}, axis=1, inplace=True)
+        self.__info.rename(
+            {'extraLarge': 'img_large', 'medium': 'img_small'},
+            axis=1,
+            inplace=True,
+        )
 
         self.drop(
             ['description', 'romaji', 'english', 'native', 'extraLarge', 'color'],
