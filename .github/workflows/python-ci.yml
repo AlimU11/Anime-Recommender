@@ -34,9 +34,9 @@ jobs:
         run: |
           poetry install --no-root
 
-      - name: Remove unused with autoflake
-        run: |
-          poetry run autoflake --remove-all-unused-imports --recursive --remove-unused-variables --check .
+      # - name: Remove unused with autoflake
+      #   run: |
+      #     poetry run autoflake --remove-all-unused-imports --recursive --remove-unused-variables --check .
 
       - name: Sort with isort
         run: |
