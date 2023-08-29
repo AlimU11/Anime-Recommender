@@ -3,7 +3,7 @@ from typing import Final, Optional, final
 import requests
 from multipledispatch import dispatch
 
-from . import IClient, id_query, lists_query, media, media_query, query, variables
+from . import IClient, id_query, lists_query, media_query, query, variables
 
 
 @final

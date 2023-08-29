@@ -6,8 +6,7 @@ import pandas as pd
 from pandas import DataFrame
 
 from anime_recommender.config import config
-
-from . import IStorage
+from anime_recommender.storage.IStorage import IStorage
 
 
 @final

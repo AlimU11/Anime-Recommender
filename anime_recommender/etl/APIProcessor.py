@@ -2,7 +2,6 @@ import os
 import pickle
 from typing import Final
 
-import pandas as pd
 from loguru import logger
 from pandas import DataFrame, RangeIndex, notna
 

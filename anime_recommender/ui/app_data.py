@@ -15,7 +15,8 @@ from anime_recommender.client import AnilistClient, IClient
 from anime_recommender.etl.ITextProcessor import ITextProcessor
 from anime_recommender.etl.TextProcessor import TextProcessor
 from anime_recommender.recommender.recommender_interface import IRecommender
-from anime_recommender.storage import IStorage, LocalStorage
+from anime_recommender.storage.IStorage import IStorage
+from anime_recommender.storage.LocalStorage import LocalStorage
 
 
 @dataclass
