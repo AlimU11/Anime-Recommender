@@ -1,0 +1,51 @@
+name: Python CI
+
+on: [push]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        python-version: ["3.10"]
+
+    steps:
+
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Install Poetry
+        run: |
+          pip install poetry
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: poetry
+          cache-dependency-path: poetry.lock
+
+      - name: Set Poetry environment
+        run: |
+          poetry env use python${{ matrix.python-version }}
+
+      - name: Install dependencies
+        run: |
+          poetry install --no-root
+
+      - name: Remove unused with autoflake
+        run: |
+          poetry run autoflake --remove-all-unused-imports --recursive --remove-unused-variables --check .
+
+      - name: Sort with isort
+        run: |
+          poetry run isort -c -v --profile black .
+
+      - name: Format with black
+        run: |
+          poetry run black --check .
+
+      # - name: Lint with flake8
+      #   run: |
+      #     poetry run flake8
